@@ -1,0 +1,3 @@
+const LIGNE_PAR_PAGES= 25;
+const SECRET_KEY = 'b1717167dd1920d2ef95d8ae8de426a0adc0d8dca3551437862a2c3310b9e53a';
+module.exports = { LIGNE_PAR_PAGES,SECRET_KEY };
