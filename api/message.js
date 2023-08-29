@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { db } = require('../db'); // Importez votre connexion à la base de données depuis le fichier db.js
-const {io} = require('../socket_discition');
+const {io} = require('../discution');
 
 const router = express.Router();
 const { query,body, validationResult } = require('express-validator');

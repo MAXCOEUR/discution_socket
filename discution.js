@@ -26,9 +26,9 @@ io.on('connection', (socket) => {
 
 module.exports={io};
 
-const userRoutes = require('./api/user'); // Importez les routes utilisateur depuis le fichier user.js
-const conversationRoutes = require('./api/conversation');
-const messageRoutes = require('./api/message');
+const userRoutes = require('./api/user.js'); // Importez les routes utilisateur depuis le fichier user.js
+const conversationRoutes = require('./api/conversation.js');
+const messageRoutes = require('./api/message.js');
 const amisRoutes = require('./api/amis.js');
 
 app.use(bodyParser.json({ limit: '20mb' }));
