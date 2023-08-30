@@ -5,7 +5,7 @@ const { db } = require('../db'); // Importez votre connexion à la base de donn�
 
 const router = express.Router();
 const { query, body, validationResult } = require('express-validator');
-const { LIGNE_PAR_PAGES, SECRET_KEY,uploadUserAvatar } = require('../constantes.js');
+const { LIGNE_PAR_PAGES, SECRET_KEY, uploadUserAvatar } = require('../constantes.js');
 const { authenticateToken } = require('../middleware.js');
 
 // Créer un utilisateur
@@ -22,7 +22,7 @@ router.post('', [
   }
 
   var { email, uniquePseudo, pseudo, passWord } = req.body;
-  
+
 
   try {
 
@@ -40,21 +40,32 @@ router.post('', [
     db.query(query, newUser, (err, result) => {
       if (err) {
         console.error('Erreur lors de la création de l\'utilisateur:', err);
-        res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de l\'utilisateur'}));
+
+        if (err.code === 'ER_DUP_ENTRY') {
+          if (err.sqlMessage.includes('email_UNIQUE')) {
+            res.status(400).send({ message: 'Cette adresse e-mail est déjà utilisée.' });
+          } else if (err.sqlMessage.includes('PRIMARY')) {
+            res.status(400).send({ message: 'le @ est déjà utilisée.' });
+          } else {
+            res.status(400).send({ message: 'Erreur lors de la création de l\'utilisateur.' });
+          }
+        } else {
+          res.status(500).send({ message: 'Erreur lors de la création de l\'utilisateur.' });
+        }
       } else {
         res.status(201).send(JSON.stringify(newUser));
       }
     });
   } catch (error) {
     console.error('Erreur lors du hachage du mot de passe:', error);
-    res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de l\'utilisateur'}));
+    res.status(500).send(JSON.stringify({ message: 'Erreur lors de la création de l\'utilisateur' }));
   }
 });
 router.post('/upload', uploadUserAvatar.single('avatar'), (req, res) => {
   if (!req.file) {
-    return res.status(400).send(JSON.stringify({'message':'Aucun fichier téléchargé.'}));
+    return res.status(400).send(JSON.stringify({ 'message': 'Aucun fichier téléchargé.' }));
   }
-  return res.status(200).send(JSON.stringify({'message':'Image téléchargée avec succès.'}));
+  return res.status(200).send(JSON.stringify({ 'message': 'Image téléchargée avec succès.' }));
 });
 
 router.get('', [
@@ -78,10 +89,10 @@ router.get('', [
   const myUniquePseudo = decodedToken.uniquePseudo;
 
   const query = "SELECT u.*, CASE WHEN EXISTS (SELECT 1 FROM amis WHERE (demandeur = ? AND receveur = u.uniquePseudo) OR (demandeur = u.uniquePseudo AND receveur = ?)) THEN 1 ELSE 0 END AS sont_amis FROM user u WHERE u.uniquePseudo LIKE ? LIMIT ? OFFSET ?;";
-  db.query(query, [myUniquePseudo,myUniquePseudo,search, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
+  db.query(query, [myUniquePseudo, myUniquePseudo, search, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
     if (err) {
       console.error('Erreur lors de la recherche de l\'utilisateur:', err);
-      res.status(500).send(JSON.stringify({'message':'Erreur lors de la recherche de l\'utilisateur'}));
+      res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recherche de l\'utilisateur' }));
     } else {
       // Convertir les données binaires de l'Avatar en base64
 
@@ -107,9 +118,9 @@ router.post('/login', [
     db.query(query, [emailOrPseudo, emailOrPseudo], async (err, results) => {
       if (err) {
         console.error('Erreur lors de la vérification de la connexion:', err);
-        res.status(500).send('Erreur lors de la vérification de la connexion');
+        res.status(500).send(JSON.stringify({message:'Erreur lors de la vérification de la connexion'}));
       } else if (results.length === 0) {
-        res.status(401).send('Utilisateur non trouvé');
+        res.status(401).send(JSON.stringify({message:'Email ou @ non trouvé'}));
       } else {
         var user = results[0];
         const passwordMatch = await bcrypt.compare(passWord, user.passWord);
@@ -126,7 +137,7 @@ router.post('/login', [
 
           res.status(200).send(jsonResponse);
         } else {
-          res.status(401).send(JSON.stringify({'message':'Mot de passe incorrect'}));
+          res.status(401).send(JSON.stringify({ message: 'Mot de passe incorrect' }));
         }
       }
     });
@@ -161,9 +172,9 @@ router.put('', [
   db.query(querySelect, [uniquePseudo_old], async (err, results) => {
     if (err) {
       console.error('Erreur lors de la vérification de la connexion:', err);
-      res.status(500).send(JSON.stringify({'message':'Erreur lors de la vérification de la connexion'}));
+      res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la vérification de la connexion' }));
     } else if (results.length === 0) {
-      res.status(401).send(JSON.stringify({'message':'Utilisateur non trouvé'}));
+      res.status(401).send(JSON.stringify({ 'message': 'Utilisateur non trouvé' }));
     } else {
       const user = results[0];
 
@@ -180,15 +191,26 @@ router.put('', [
         var queryUpdate = 'UPDATE user SET ? where uniquePseudo = ?';
         db.query(queryUpdate, [newUser, uniquePseudo_old], (err, result) => {
           if (err) {
-            console.error('Erreur lors de la modification de l\'utilisateur:', err);
-            res.status(500).send(JSON.stringify({'message':'Erreur lors de la modification de l\'utilisateur'}));
+            console.error('Erreur lors de la création de l\'utilisateur:', err);
+
+            if (err.code === 'ER_DUP_ENTRY') {
+              if (err.sqlMessage.includes('email_UNIQUE')) {
+                res.status(400).send({ message: 'Cette adresse e-mail est déjà utilisée.' });
+              } else if (err.sqlMessage.includes('PRIMARY')) {
+                res.status(400).send({ message: 'le @ est déjà utilisée.' });
+              } else {
+                res.status(400).send({ message: 'Erreur lors de la création de l\'utilisateur.' });
+              }
+            } else {
+              res.status(500).send({ message: 'Erreur lors de la création de l\'utilisateur.' });
+            }
           } else {
             res.status(201).send(JSON.stringify(newUser));
           }
         });
       } catch (error) {
         console.error(error);
-        res.status(500).send(JSON.stringify({'message':'Erreur lors de la modification de l\'utilisateur'}));
+        res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la modification de l\'utilisateur' }));
       }
     }
   });
