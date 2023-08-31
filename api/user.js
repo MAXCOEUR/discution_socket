@@ -87,7 +87,7 @@ router.get('/unread',[
       console.error('Erreur lors de la recherche de l\'utilisateur:', err);
       res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recherche du nombre de message non lu' }));
     } else {
-      res.status(200).send(JSON.stringify(result));
+      res.status(200).send(JSON.stringify(result[0]));
     }
   });
 
