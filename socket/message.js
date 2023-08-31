@@ -17,6 +17,9 @@ module.exports = {
         socket.on('luMessage', (data) => {
             handleLuMessage(socket, data);
         });
+        socket.on('updateMessageNonLu', (data) => {
+            handleupdateMessageNonLu(socket, data,io);
+        });
     },
 };
 async function handleMessage(socket, data,io) {
@@ -69,4 +72,17 @@ function handleLuMessage(socket, data) {
         console.log("luAllMessage "+uniquePseudo+" : "+data.messageId);
       }
     });
+}
+function handleupdateMessageNonLu(socket,data,io){
+    const decodedToken = jwt.verify(data.token, SECRET_KEY);
+    const myUniquePseudo = decodedToken.uniquePseudo;
+    const query = "select sum(unread) unread from `user-conversation` uc left join ( 	SELECT m.id_conversation, COUNT(m.id) - IFNULL(COUNT(r.id_message), 0) AS unread     FROM messages m     LEFT JOIN `message-read` r ON m.id = r.id_message     AND r.uniquePseudo_user = ?     GROUP BY m.id_conversation)cc on uc.id_conversation=cc.id_conversation where uc.uniquePseudo_user=? group by uc.uniquePseudo_user;";
+  db.query(query, [myUniquePseudo, myUniquePseudo], (err, result) => {
+    if (err) {
+      console.error('Erreur lors de la recherche du nombre de message non lu :', err);
+    } else {
+        let unread = parseInt(result[0].unread);
+        io.to(`user:${myUniquePseudo}`).emit('updateMessageNonLu', {unread});
+    }
+  });
 }

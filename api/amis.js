@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { db } = require('../db'); // Importez votre connexion à la base de données depuis le fichier db.js
+const {io} = require('../discution');
 
 const router = express.Router();
 const { query, body, validationResult } = require('express-validator');
@@ -83,8 +84,8 @@ router.get('/demande/nbr', [
     const query = "SELECT Count(*) nbrDemande from demandeAmis da join user u on da.demandeur=u.uniquePseudo WHERE da.receveur like ?;";
     db.query(query, [uniquePseudo], (err, result) => {
         if (err) {
-            console.error('Erreur lors de la recherche de la conversation :', err);
-            res.status(500).send('Erreur lors de la recherche de la conversation');
+            console.error('Erreur lors de la recherche du nombre de demande d\'amis :', err);
+            res.status(500).send('Erreur lors de la recherche du nombre de demande d\'amis');
         } else {
             res.status(200).send(JSON.stringify(result[0]));
         }
@@ -193,6 +194,7 @@ router.delete('/refuse', [
             console.error('Erreur lors de la recherche de la conversation :', err);
             res.status(500).send('Erreur lors de la recherche de la conversation');
         } else {
+            io.to(`user:${MyuniquePseudo}`).emit('deleteAmis', {'user': result});
             res.status(201).send(JSON.stringify(result));
         }
     });
@@ -219,7 +221,11 @@ router.post('', [
             console.error('Erreur lors de la recherche de la conversation :', err);
             res.status(500).send('Erreur lors de la recherche de la conversation');
         } else {
-            res.status(201).send(JSON.stringify(result));
+            io.to(`user:${uniquePseudo}`).emit('demandeAmis', {'user': result[0]});
+            io.to(`user:${MyuniquePseudo}`).emit('newAmis', {'user': result[0]});
+                         
+            
+            res.status(201).send(JSON.stringify(result[0]));
         }
     });
 });

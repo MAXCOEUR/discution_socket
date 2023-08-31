@@ -84,7 +84,7 @@ router.get('/unread',[
   const query = "select sum(unread) unread from `user-conversation` uc left join ( 	SELECT m.id_conversation, COUNT(m.id) - IFNULL(COUNT(r.id_message), 0) AS unread     FROM messages m     LEFT JOIN `message-read` r ON m.id = r.id_message     AND r.uniquePseudo_user = ?     GROUP BY m.id_conversation)cc on uc.id_conversation=cc.id_conversation where uc.uniquePseudo_user=? group by uc.uniquePseudo_user;";
   db.query(query, [myUniquePseudo, myUniquePseudo], (err, result) => {
     if (err) {
-      console.error('Erreur lors de la recherche de l\'utilisateur:', err);
+      console.error('Erreur lors de la recherche du nombre de message non lu :', err);
       res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recherche du nombre de message non lu' }));
     } else {
       res.status(200).send(JSON.stringify(result[0]));
