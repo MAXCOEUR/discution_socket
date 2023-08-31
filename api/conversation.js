@@ -28,8 +28,6 @@ function isAdmin(token, id_conversation, parametre, func) {
 }
 
 
-
-
 router.get('', [
   query('search').exists().withMessage('search requis'),
   query('page').notEmpty().withMessage('page requis'),

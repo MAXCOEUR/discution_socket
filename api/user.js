@@ -68,6 +68,31 @@ router.post('/upload', uploadUserAvatar.single('avatar'), (req, res) => {
   return res.status(200).send(JSON.stringify({ 'message': 'Image téléchargée avec succès.' }));
 });
 
+router.get('/unread',[
+  authenticateToken
+],async (req, res) =>{
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // Envoyer une réponse avec les erreurs
+    return res.status(400).json({ errors: errors.array() });
+  }
+  const tokenHeader = req.headers.authorization;
+  const token = tokenHeader.split(' ')[1];
+  const decodedToken = jwt.verify(token, SECRET_KEY);
+  const myUniquePseudo = decodedToken.uniquePseudo;
+
+  const query = "select sum(unread) unread from `user-conversation` uc left join ( 	SELECT m.id_conversation, COUNT(m.id) - IFNULL(COUNT(r.id_message), 0) AS unread     FROM messages m     LEFT JOIN `message-read` r ON m.id = r.id_message     AND r.uniquePseudo_user = ?     GROUP BY m.id_conversation)cc on uc.id_conversation=cc.id_conversation where uc.uniquePseudo_user=? group by uc.uniquePseudo_user;";
+  db.query(query, [myUniquePseudo, myUniquePseudo], (err, result) => {
+    if (err) {
+      console.error('Erreur lors de la recherche de l\'utilisateur:', err);
+      res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recherche du nombre de message non lu' }));
+    } else {
+      res.status(200).send(JSON.stringify(result));
+    }
+  });
+
+});
+
 router.get('', [
   query('search').exists().withMessage('search requis'),
   query('page').notEmpty().withMessage('page requis'),
