@@ -67,6 +67,29 @@ router.get('/demande', [
         }
     });
 });
+router.get('/demande/nbr', [
+    authenticateToken
+], async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({ error: error.array() });
+    }
+    
+    const tokenHeader = req.headers.authorization;
+    const token = tokenHeader.split(' ')[1];
+    const decodedToken = jwt.verify(token, SECRET_KEY);
+    const uniquePseudo = decodedToken.uniquePseudo;
+
+    const query = "SELECT Count(*) nbrDemande from demandeAmis da join user u on da.demandeur=u.uniquePseudo WHERE da.receveur like ?;";
+    db.query(query, [uniquePseudo], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la recherche de la conversation :', err);
+            res.status(500).send('Erreur lors de la recherche de la conversation');
+        } else {
+            res.status(200).send(JSON.stringify(result[0]));
+        }
+    });
+});
 router.get('/demande/send', [
     query('search').exists().withMessage('search requis'),
     query('page').notEmpty().withMessage('page requis'),
