@@ -118,9 +118,9 @@ router.post('/login', [
     db.query(query, [emailOrPseudo, emailOrPseudo], async (err, results) => {
       if (err) {
         console.error('Erreur lors de la vérification de la connexion:', err);
-        res.status(500).send(JSON.stringify({message:'Erreur lors de la vérification de la connexion'}));
+        res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));
       } else if (results.length === 0) {
-        res.status(401).send(JSON.stringify({message:'Email ou @ non trouvé'}));
+        res.status(401).send(JSON.stringify({ message: 'Email ou @ non trouvé' }));
       } else {
         var user = results[0];
         const passwordMatch = await bcrypt.compare(passWord, user.passWord);
@@ -145,6 +145,43 @@ router.post('/login', [
     console.error('Erreur lors de la vérification de la connexion:', error);
     res.status(500).send('Erreur lors de la vérification de la connexion');
   }
+});
+router.post('/login/token', [
+  authenticateToken
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // Envoyer une réponse avec les erreurs
+    return res.status(400).json({ errors: errors.array() });
+  }
+  const tokenHeader = req.headers.authorization;
+  const token = tokenHeader.split(' ')[1];
+  const decodedToken = jwt.verify(token, SECRET_KEY);
+  const uniquePseudo = decodedToken.uniquePseudo;
+
+  const query = 'SELECT * FROM user WHERE uniquePseudo = ?';
+  db.query(query, [uniquePseudo], async (err, results) => {
+    if (err) {
+      console.error('Erreur lors de la vérification de la connexion:', err);
+      res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));
+    } else if (results.length === 0) {
+      res.status(401).send(JSON.stringify({ message: 'Email ou @ non trouvé' }));
+    } else {
+      var user = results[0];
+
+      const token = jwt.sign({ uniquePseudo: user.uniquePseudo, email: user.email }, SECRET_KEY, { expiresIn: '24h' });
+
+      const responseObj = {
+        user,
+        token
+      };
+
+      const jsonResponse = JSON.stringify(responseObj);
+
+      res.status(200).send(jsonResponse);
+    }
+  });
+
 });
 
 router.put('', [
