@@ -1,11 +1,11 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { db } = require('../db'); // Importez votre connexion à la base de données depuis le fichier db.js
-const {io} = require('../discution');
+const { io } = require('../discution');
 
 const router = express.Router();
-const { query,body, validationResult } = require('express-validator');
-const { LIGNE_PAR_PAGES, SECRET_KEY,uploadFile } = require('../constantes.js');
+const { query, body, validationResult } = require('express-validator');
+const { LIGNE_PAR_PAGES, SECRET_KEY, uploadFile } = require('../constantes.js');
 const { authenticateToken } = require('../middleware.js');
 const { json } = require('body-parser');
 
@@ -21,7 +21,7 @@ function isInConv(token, id_conversation, parametre, func) {
         } else {
             if (result.length === 0) {
                 console.log('l utilisateur n est pas dans la conversation');
-                parametre.res.status(500).send(JSON.stringify({'message':'l utilisateur n est pas dans la conversation'}));
+                parametre.res.status(500).send(JSON.stringify({ 'message': 'l utilisateur n est pas dans la conversation' }));
             } else {
                 func(parametre);
             }
@@ -40,7 +40,7 @@ function isSenderMessage(token, id_message, parametre, func) {
         } else {
             if (result.length === 0) {
                 console.log('l utilisateur n est pas le sender du message');
-                parametre.res.status(500).send(JSON.stringify({'message':'l utilisateur n est pas le sender du message'}));
+                parametre.res.status(500).send(JSON.stringify({ 'message': 'l utilisateur n est pas le sender du message' }));
             } else {
                 func(parametre);
             }
@@ -64,32 +64,32 @@ router.get('', [
     const decodedToken = jwt.verify(token, SECRET_KEY);
     const uniquePseudo = decodedToken.uniquePseudo;
 
-    if(id_lastMessage==0){
+    if (id_lastMessage == 0) {
         const parametre = {
             id_conversation,
             uniquePseudo,
             res
         }
-    
+
         isInConv(token, id_conversation, parametre, getLastMessage);
-    }else{
+    } else {
         const parametre = {
             id_conversation,
             id_lastMessage,
             uniquePseudo,
             res
         }
-    
+
         isInConv(token, id_conversation, parametre, getMessage);
     }
-    
+
 });
 const getMessage = function (parametre) {
     const query = 'SELECT m.*, u.*,GROUP_CONCAT(f.linkFile) linkfile,GROUP_CONCAT(f.name) name, CASE WHEN r.id_message IS NOT NULL THEN 1 ELSE 0 END AS is_read FROM messages m JOIN user u ON m.uniquePseudo_sender = u.uniquePseudo LEFT JOIN `message-read` r ON m.id = r.id_message AND r.uniquePseudo_user = ? LEFT JOIN file f ON f.id_message = m.id WHERE m.id_conversation = ? AND m.id < ? group by 1 ORDER BY m.id DESC LIMIT ?;';
-    db.query(query, [parametre.uniquePseudo,parametre.id_conversation, parametre.id_lastMessage,LIGNE_PAR_PAGES], (err, result) => {
+    db.query(query, [parametre.uniquePseudo, parametre.id_conversation, parametre.id_lastMessage, LIGNE_PAR_PAGES], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recuperation des message:', err);
-            parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la recuperation des message'}));
+            parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
         } else {
             parametre.res.status(201).send(JSON.stringify(result));
         }
@@ -97,10 +97,10 @@ const getMessage = function (parametre) {
 }
 const getLastMessage = function (parametre) {
     const query = 'SELECT m.*, u.*,GROUP_CONCAT(f.linkFile) linkfile,GROUP_CONCAT(f.name) name, CASE WHEN r.id_message IS NOT NULL THEN 1 ELSE 0 END AS is_read FROM messages m JOIN user u ON m.uniquePseudo_sender = u.uniquePseudo LEFT JOIN `message-read` r ON m.id = r.id_message AND r.uniquePseudo_user = ? LEFT JOIN file f ON f.id_message = m.id WHERE m.id_conversation = ? group by 1 ORDER BY m.id DESC LIMIT ?;';
-    db.query(query, [parametre.uniquePseudo,parametre.id_conversation,LIGNE_PAR_PAGES], (err, result) => {
+    db.query(query, [parametre.uniquePseudo, parametre.id_conversation, LIGNE_PAR_PAGES], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recuperation des message:', err);
-            parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la recuperation des message'}));
+            parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
         } else {
             parametre.res.status(201).send(JSON.stringify(result));
         }
@@ -116,10 +116,10 @@ router.post('', [
     if (!error.isEmpty()) {
         return res.status(400).json({ error: error.array() });
     }
-    var { id_conversation, message,file } = req.body;
-    if(file!=null){
+    var { id_conversation, message, file } = req.body;
+    if (file != null) {
         file = Buffer.from(file);
-      }
+    }
 
     const tokenHeader = req.headers.authorization;
     const token = tokenHeader.split(' ')[1];
@@ -138,10 +138,10 @@ router.post('', [
 });
 const postMessage = function (parametre) {
     const query = 'call CreateMessage(?,?,?,?);';
-    db.query(query, [parametre.uniquePseudo, parametre.id_conversation, parametre.message,parametre.file], (err, result) => {
+    db.query(query, [parametre.uniquePseudo, parametre.id_conversation, parametre.message, parametre.file], (err, result) => {
         if (err) {
             console.error('Erreur lors de la creation du message:', err);
-            parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la creation du message'}));
+            parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la creation du message' }));
         } else {
             parametre.res.status(201).send(JSON.stringify(result));
         }
@@ -149,12 +149,12 @@ const postMessage = function (parametre) {
 }
 router.post('/upload', uploadFile.single('file'), (req, res) => {
     if (!req.file) {
-      return res.status(400).send(JSON.stringify({'message':'Aucun fichier téléchargé.'}));
+        return res.status(400).send(JSON.stringify({ 'message': 'Aucun fichier téléchargé.' }));
     }
-    console.log("fin televersement fichier du message : "+req.body.id_message);
-    io.to(`conversation:${req.body.id_conversation}`).emit('EndFile',{'id_message':parseInt(req.body.id_message),'name':req.body.namereal,'fieldname':req.body.fieldname});
-    return res.status(200).send(JSON.stringify({'message':'Image téléchargée avec succès.'}));
-  });
+    console.log("fin televersement fichier du message : " + req.body.id_message);
+    io.to(`conversation:${req.body.id_conversation}`).emit('EndFile', { 'id_message': parseInt(req.body.id_message), 'name': req.body.namereal, 'fieldname': req.body.fieldname });
+    return res.status(200).send(JSON.stringify({ 'message': 'Image téléchargée avec succès.' }));
+});
 
 
 router.delete('', [
@@ -178,15 +178,29 @@ router.delete('', [
     isSenderMessage(token, id_message, parametre, deleteMessage);
 });
 const deleteMessage = function (parametre) {
-    const query = 'delete from messages where id=?;';
-    db.query(query, [parametre.id_message], (err, result) => {
+
+    const query1 = 'select id_conversation from messages where id=?;';
+    db.query(query1, [parametre.id_message], (err, result) => {
         if (err) {
             console.error('Erreur lors de la suppression du message:', err);
-            parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la suppression du message'}));
+            parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression du message' }));
         } else {
-            parametre.res.status(201).send(JSON.stringify(result));
+            let id_conversation = result[0]["id_conversation"];
+            const query = 'delete from messages where id=?;';
+            db.query(query, [parametre.id_message], (err, result) => {
+                if (err) {
+                    console.error('Erreur lors de la suppression du message:', err);
+                    parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression du message' }));
+                } else {
+                    let id_message = parametre.id_message;
+                    io.to(`conversation:${id_conversation}`).emit('deleteMessage', { id_message, id_conversation });
+                    parametre.res.status(201).send(JSON.stringify(result));
+                }
+            });
         }
     });
+
+
 }
 
 
@@ -199,11 +213,8 @@ router.put('', [
     if (!error.isEmpty()) {
         return res.status(400).json({ error: error.array() });
     }
-    var {id_message}=req.query;
-    var { message,file } = req.body;
-    if(file!=null){
-        file = Buffer.from(file);
-      }
+    var { id_message } = req.query;
+    var { message } = req.body;
 
     const tokenHeader = req.headers.authorization;
     const token = tokenHeader.split(' ')[1];
@@ -211,7 +222,6 @@ router.put('', [
     const parametre = {
         id_message,
         message,
-        file,
         res
     }
 
@@ -219,16 +229,27 @@ router.put('', [
 });
 const putMessage = function (parametre) {
     const newMes = {
-        message: parametre.message,
-        file: parametre.file
+        message: parametre.message
     }
-    const query = 'UPDATE messages SET ? where id = ?;';
-    db.query(query, [newMes, parametre.id_message], (err, result) => {
+    const query1 = 'select id_conversation from messages where id=?;';
+    db.query(query1, [parametre.id_message], (err, result) => {
         if (err) {
-            console.error('Erreur lors de la modification du message:', err);
-            parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la modification du message'}));
+            console.error('Erreur lors de la suppression du message:', err);
+            parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression du message' }));
         } else {
-            parametre.res.status(201).send(JSON.stringify(result));
+            let id_conversation = result[0]["id_conversation"];
+            let message = parametre.message;
+            let id_message = parametre.id_message;
+            const query = 'UPDATE messages SET ? where id = ?;';
+            db.query(query, [newMes, parametre.id_message], (err, result) => {
+                if (err) {
+                    console.error('Erreur lors de la modification du message:', err);
+                    parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la modification du message' }));
+                } else {
+                    io.to(`conversation:${id_conversation}`).emit('editMessage', { id_message, id_conversation,'message':message });
+                    parametre.res.status(201).send(JSON.stringify(result));
+                }
+            });
         }
     });
 }

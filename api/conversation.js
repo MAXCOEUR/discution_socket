@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { db } = require('../db'); // Importez votre connexion à la base de données depuis le fichier db.js
+const {io} = require('../discution');
 
 const router = express.Router();
 const { query, body, validationResult } = require('express-validator');
@@ -203,7 +204,18 @@ const addUser = function (parametre) {
       console.error('Erreur lors de la création de la conversation:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de la conversation'}));
     } else {
-      parametre.res.status(201).send(JSON.stringify(result));
+      const query = 'select * from conversation where id=?';
+      db.query(query, [parametre.id_conversation], (err, result) => {
+        if (err) {
+          console.error('Erreur lors de la création de la conversation:', err);
+          parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de la conversation'}));
+        } else{
+          var conversation=result[0];
+          io.to(`user:${parametre.uniquePseudo}`).emit('newConversation', {conversation});
+          parametre.res.status(201).send(JSON.stringify(result));
+        }
+      });
+      
     }
   });
 }
@@ -231,6 +243,30 @@ router.delete('/user', [
 
 
 });
+router.delete('/user/me', [
+  query('id_conversation').notEmpty().withMessage('id_conversation requis'),
+  authenticateToken
+], async (req, res) => {
+  const error = validationResult(req);
+  if (!error.isEmpty()) {
+    return res.status(400).json({ error: error.array() });
+  }
+  const { id_conversation } = req.query;
+
+  const tokenHeader = req.headers.authorization;
+  const token = tokenHeader.split(' ')[1];
+  const decodedToken = jwt.verify(token, SECRET_KEY);
+  const uniquePseudo = decodedToken.uniquePseudo;
+
+  const parametre = {
+    uniquePseudo,
+    id_conversation,
+    res
+  }
+
+  deleteUser(parametre);
+
+});
 const deleteUser = function (parametre) {
   const query = 'delete from `user-conversation` where id_conversation=? and uniquePseudo_user=?;';
   db.query(query, [parametre.id_conversation, parametre.uniquePseudo], (err, result) => {
@@ -238,6 +274,8 @@ const deleteUser = function (parametre) {
       console.error('Erreur lors de la suppression du user:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la suppression du user'}));
     } else {
+      let id_conversation = parametre.id_conversation;
+      io.to(`user:${parametre.uniquePseudo}`).emit('deleteConversation', {id_conversation});
       parametre.res.status(201).send(JSON.stringify(result));
     }
   });
