@@ -33,8 +33,8 @@ async function handleMessage(socket, data,io) {
         const decodedToken = jwt.verify(data.token, SECRET_KEY);
         const uniquePseudo = decodedToken.uniquePseudo;
 
-        const query = 'call CreateMessage(?,?,?);';
-        db.query(query, [uniquePseudo, data.conversationId, data.messageText], (err, result) => {
+        const query = 'call CreateMessage(?,?,?,?);';
+        db.query(query, [uniquePseudo, data.conversationId, data.messageText,data.id_parent], (err, result) => {
             if (err) {
                 console.error('Erreur lors de la création du message:', err);
             } else {
