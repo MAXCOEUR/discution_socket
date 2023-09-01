@@ -91,7 +91,7 @@ const getMessage = function (parametre) {
             console.error('Erreur lors de la recuperation des message:', err);
             parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
         } else {
-            parametre.res.status(201).send(JSON.stringify(result));
+            parametre.res.status(201).send(JSON.stringify(result[0]));
         }
     });
 }
@@ -102,7 +102,7 @@ const getLastMessage = function (parametre) {
             console.error('Erreur lors de la recuperation des message:', err);
             parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
         } else {
-            parametre.res.status(201).send(JSON.stringify(result));
+            parametre.res.status(201).send(JSON.stringify(result[0]));
         }
     });
 }
