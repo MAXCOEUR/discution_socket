@@ -85,7 +85,7 @@ router.get('', [
 
 });
 const getMessage = function (parametre) {
-    const query = 'SELECT m.*, u.*,GROUP_CONCAT(f.linkFile) linkfile,GROUP_CONCAT(f.name) name, CASE WHEN r.id_message IS NOT NULL THEN 1 ELSE 0 END AS is_read FROM messages m JOIN user u ON m.uniquePseudo_sender = u.uniquePseudo LEFT JOIN `message-read` r ON m.id = r.id_message AND r.uniquePseudo_user = ? LEFT JOIN file f ON f.id_message = m.id WHERE m.id_conversation = ? AND m.id < ? group by 1 ORDER BY m.id DESC LIMIT ?;';
+    const query = 'call getMessage(?,?,?,?);';
     db.query(query, [parametre.uniquePseudo, parametre.id_conversation, parametre.id_lastMessage, LIGNE_PAR_PAGES], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recuperation des message:', err);
@@ -96,7 +96,7 @@ const getMessage = function (parametre) {
     });
 }
 const getLastMessage = function (parametre) {
-    const query = 'SELECT m.*, u.*,GROUP_CONCAT(f.linkFile) linkfile,GROUP_CONCAT(f.name) name, CASE WHEN r.id_message IS NOT NULL THEN 1 ELSE 0 END AS is_read FROM messages m JOIN user u ON m.uniquePseudo_sender = u.uniquePseudo LEFT JOIN `message-read` r ON m.id = r.id_message AND r.uniquePseudo_user = ? LEFT JOIN file f ON f.id_message = m.id WHERE m.id_conversation = ? group by 1 ORDER BY m.id DESC LIMIT ?;';
+    const query = 'call getMessageLast(?,?,?);';
     db.query(query, [parametre.uniquePseudo, parametre.id_conversation, LIGNE_PAR_PAGES], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recuperation des message:', err);
