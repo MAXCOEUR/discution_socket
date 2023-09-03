@@ -33,7 +33,7 @@ const amisRoutes = require('./api/amis.js');
 
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
-app.use('/uploads', express.static('uploads'));
+
 app.use('/uploads', (req, res, next) => {
   const imagePath = path.join(__dirname, 'uploads', req.url); // Chemin de l'image demandée
   if (fs.existsSync(imagePath)) {
@@ -55,6 +55,8 @@ app.use('/api/user/', userRoutes);
 app.use('/api/conv/', conversationRoutes);
 app.use('/api/message/', messageRoutes);
 app.use('/api/amis/', amisRoutes);
+
+app.use('/uploads', express.static('uploads'));
 
 
 const PORT = 3000;
