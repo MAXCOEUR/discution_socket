@@ -33,17 +33,6 @@ const amisRoutes = require('./api/amis.js');
 
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
-
-
-
-
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*'); // Autoriser toutes les origines
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'); // Autoriser les méthodes
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Autoriser les en-têtes
-  res.header('Content-Type', 'application/json; charset=utf-8'); // Spécifier l'encodage UTF-8
-  next();
-});
 app.use('/uploads', express.static('uploads'));
 app.use('/uploads', (req, res, next) => {
   const imagePath = path.join(__dirname, 'uploads', req.url); // Chemin de l'image demandée
@@ -54,12 +43,18 @@ app.use('/uploads', (req, res, next) => {
   next();
 });
 
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*'); // Autoriser toutes les origines
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'); // Autoriser les méthodes
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Autoriser les en-têtes
+  res.header('Content-Type', 'application/json; charset=utf-8'); // Spécifier l'encodage UTF-8
+  next();
+});
 app.use('/api/user/', userRoutes);
 app.use('/api/conv/', conversationRoutes);
 app.use('/api/message/', messageRoutes);
 app.use('/api/amis/', amisRoutes);
-
-
 
 
 const PORT = 3000;
