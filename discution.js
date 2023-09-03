@@ -34,14 +34,6 @@ const amisRoutes = require('./api/amis.js');
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
 
-app.use('/uploads', (req, res, next) => {
-  const imagePath = path.join(__dirname, 'uploads', req.url); // Chemin de l'image demandée
-  if (fs.existsSync(imagePath)) {
-    const oneYearInSeconds = 5*60; // 5 minutes
-    res.set('Cache-Control', `public, max-age=${oneYearInSeconds}`);
-  }
-  next();
-});
 
 
 app.use((req, res, next) => {
@@ -51,12 +43,22 @@ app.use((req, res, next) => {
   res.header('Content-Type', 'application/json; charset=utf-8'); // Spécifier l'encodage UTF-8
   next();
 });
+app.use('/uploads', express.static('uploads'));
+app.use('/uploads', (req, res, next) => {
+  const imagePath = path.join(__dirname, 'uploads', req.url); // Chemin de l'image demandée
+  if (fs.existsSync(imagePath)) {
+    const oneYearInSeconds = 5*60; // 5 minutes
+    res.set('Cache-Control', `public, max-age=${oneYearInSeconds}`);
+  }
+  next();
+});
+
 app.use('/api/user/', userRoutes);
 app.use('/api/conv/', conversationRoutes);
 app.use('/api/message/', messageRoutes);
 app.use('/api/amis/', amisRoutes);
 
-app.use('/uploads', express.static('uploads'));
+
 
 
 const PORT = 3000;
