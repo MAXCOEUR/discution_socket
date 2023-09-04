@@ -38,7 +38,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*'); // Autoriser toutes les origines
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'); // Autoriser les méthodes
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Autoriser les méthodes
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Autoriser les en-têtes
   res.header('Content-Type', 'application/json; charset=utf-8'); // Spécifier l'encodage UTF-8
   next();
