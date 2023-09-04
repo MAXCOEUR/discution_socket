@@ -39,8 +39,7 @@ async function handleMessage(socket, data,io) {
                 console.error('Erreur lors de la création du message:', err);
             } else {
                 let message = result[0][0];
-                let file = data.file;
-                io.to(`conversation:${data.conversationId}`).emit('recevoirMessage', {message,file});
+                io.to(`conversation:${data.conversationId}`).emit('recevoirMessage', {message});
             }
         });
     } catch (error) {
