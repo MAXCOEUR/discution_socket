@@ -150,15 +150,15 @@ router.post('', [
   if (!error.isEmpty()) {
     return res.status(400).json({ error: error.array() });
   }
-  var { name } = req.body;
+  var { name,extension } = req.body;
 
   const tokenHeader = req.headers.authorization;
   const token = tokenHeader.split(' ')[1];
   const decodedToken = jwt.verify(token, SECRET_KEY);
   const uniquePseudo = decodedToken.uniquePseudo;
 
-  const query = 'CALL CreateConversation(?,?);';
-  db.query(query, new Array(uniquePseudo, name), (err, result) => {
+  const query = 'CALL CreateConversation(?,?,?);';
+  db.query(query, new Array(uniquePseudo, name,extension), (err, result) => {
     if (err) {
       console.error('Erreur lors de la création de la conversation:', err);
       res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de la conversation'}));
@@ -324,13 +324,14 @@ router.put('', [
     return res.status(400).json({ error: error.array() });
   }
   const { id_conversation } = req.query
-  var { name, uniquePseudo_admin } = req.body;
+  var { name, uniquePseudo_admin,extension } = req.body;
 
 
   const parametre = {
     id_conversation,
     name,
     uniquePseudo_admin,
+    extension,
     res
   }
 
@@ -349,7 +350,7 @@ const putConversation = function (parametre) {
   };
 
   var queryUpdate = 'UPDATE conversation SET ? where id = ?';
-  db.query(queryUpdate, [newConv, parametre.id_conversation], (err, result) => {
+  db.query(queryUpdate, [newConv, parametre.id_conversation,parametre.extension], (err, result) => {
     if (err) {
       console.error('Erreur lors de la mise a jour de la conv:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la mise a jour de la conv'}));
