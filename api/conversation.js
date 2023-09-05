@@ -346,11 +346,12 @@ const putConversation = function (parametre) {
 
   const newConv = {
     name: parametre.name,
-    uniquePseudo_admin: parametre.uniquePseudo_admin
+    uniquePseudo_admin: parametre.uniquePseudo_admin,
+    extension:parametre.extension
   };
 
   var queryUpdate = 'UPDATE conversation SET ? where id = ?';
-  db.query(queryUpdate, [newConv, parametre.id_conversation,parametre.extension], (err, result) => {
+  db.query(queryUpdate, [newConv, parametre.id_conversation], (err, result) => {
     if (err) {
       console.error('Erreur lors de la mise a jour de la conv:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la mise a jour de la conv'}));
