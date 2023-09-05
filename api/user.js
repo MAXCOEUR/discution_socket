@@ -21,7 +21,7 @@ router.post('', [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  var { email, uniquePseudo, pseudo, passWord } = req.body;
+  var { email, uniquePseudo, pseudo, passWord,extension,bio } = req.body;
 
 
   try {
@@ -33,7 +33,9 @@ router.post('', [
       email,
       uniquePseudo,
       pseudo,
-      passWord: hashedPassword
+      passWord: hashedPassword,
+      extension,
+      bio
     };
 
     const query = 'INSERT INTO user SET ?';
@@ -222,7 +224,7 @@ router.put('', [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  var { email, uniquePseudo, pseudo, passWord } = req.body;
+  var { email, uniquePseudo, pseudo, passWord,extension,bio } = req.body;
 
   const tokenHeader = req.headers.authorization;
   const token = tokenHeader.split(' ')[1];
@@ -247,7 +249,9 @@ router.put('', [
           email,
           uniquePseudo,
           pseudo,
-          passWord: hashedPassword
+          passWord: hashedPassword,
+          extension,
+          bio
         };
 
         var queryUpdate = 'UPDATE user SET ? where uniquePseudo = ?';
