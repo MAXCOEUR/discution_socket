@@ -53,8 +53,7 @@ router.get('', [
     "from (SELECT c.*, MAX(m.date) AS date_dernier_message "+
       "FROM conversation c "+
   	  "LEFT JOIN messages m ON c.id = m.id_conversation "+
-    	"GROUP BY 1 "+
-    	"ORDER BY date_dernier_message DESC) c "+
+    	"GROUP BY 1 ) c "+
     "join `user-conversation` uc on c.id=uc.id_conversation "+
     "left join ( "+
 	    "SELECT m.id_conversation, COUNT(m.id) - IFNULL(COUNT(r.id_message), 0) AS unread "+
@@ -62,6 +61,7 @@ router.get('', [
 	    "LEFT JOIN `message-read` r ON m.id = r.id_message AND r.uniquePseudo_user = ? "+
 	    "GROUP BY m.id_conversation )cc on c.id=cc.id_conversation "+
     "Where name like ? and uc.uniquePseudo_user=? "+
+    "ORDER BY c.date_dernier_message DESC "+
     "LIMIT ? "+
     "OFFSET ?;";
   db.query(query, [uniquePseudo, search, uniquePseudo, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
