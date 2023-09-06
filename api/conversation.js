@@ -49,20 +49,20 @@ router.get('', [
   const decodedToken = jwt.verify(token, SECRET_KEY);
   const uniquePseudo = decodedToken.uniquePseudo;
 
-  const query = "select c.*,COALESCE(cc.unRead, 0) AS unRead"+
-    "from (SELECT c.*, MAX(m.date_envoi) AS date_dernier_message"+
-      "FROM conversation c"+
-  	  "LEFT JOIN message m ON c.id = m.id_conversation"+
-    	"GROUP BY 1"+
-    	"ORDER BY date_dernier_message DESC) c"+
-    "join `user-conversation` uc on c.id=uc.id_conversation"+
+  const query = "select c.*,COALESCE(cc.unRead, 0) AS unRead "+
+    "from (SELECT c.*, MAX(m.date) AS date_dernier_message "+
+      "FROM conversation c "+
+  	  "LEFT JOIN messages m ON c.id = m.id_conversation "+
+    	"GROUP BY 1 "+
+    	"ORDER BY date_dernier_message DESC) c "+
+    "join `user-conversation` uc on c.id=uc.id_conversation "+
     "left join ( "+
-	    "SELECT m.id_conversation, COUNT(m.id) - IFNULL(COUNT(r.id_message), 0) AS unread"+
-	    "FROM messages m"+
-	    "LEFT JOIN `message-read` r ON m.id = r.id_message AND r.uniquePseudo_user = ?"+
-	    "GROUP BY m.id_conversation )cc on c.id=cc.id_conversation"+
-    "Where name like ? and uc.uniquePseudo_user=?"+
-    "LIMIT ?"+
+	    "SELECT m.id_conversation, COUNT(m.id) - IFNULL(COUNT(r.id_message), 0) AS unread "+
+	    "FROM messages m "+
+	    "LEFT JOIN `message-read` r ON m.id = r.id_message AND r.uniquePseudo_user = ? "+
+	    "GROUP BY m.id_conversation )cc on c.id=cc.id_conversation "+
+    "Where name like ? and uc.uniquePseudo_user=? "+
+    "LIMIT ? "+
     "OFFSET ?;";
   db.query(query, [uniquePseudo, search, uniquePseudo, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
     if (err) {
