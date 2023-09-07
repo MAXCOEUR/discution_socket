@@ -2,12 +2,14 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { db } = require('../db'); // Importez votre connexion à la base de données depuis le fichier db.js
 const { io } = require('../discution');
+const fs = require('fs');
 
 const router = express.Router();
 const { query, body, validationResult } = require('express-validator');
 const { LIGNE_PAR_PAGES, SECRET_KEY, uploadFile } = require('../constantes.js');
 const { authenticateToken } = require('../middleware.js');
 const { json } = require('body-parser');
+var path = require('path');
 
 
 function isInConv(token, id_conversation, parametre, func) {
@@ -178,12 +180,13 @@ const deleteMessage = function (parametre) {
 
     const query1 = 'select id_conversation from messages where id=?;';
     db.query(query1, [parametre.id_message], (err, result) => {
-        let id_message = parametre.id_message;
+        let id_message = parseInt(parametre.id_message);
         if (err) {
             console.error('Erreur lors de la suppression du message:', err);
             parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression du message' }));
         } else {
             let id_conversation = result[0]["id_conversation"];
+            //io.to(`conversation:${id_conversation}`).emit('deleteMessage', { id_message, id_conversation });
             const query = 'select * from file where id_message=?';
             db.query(query, [parametre.id_message], (err, result) => {
                 if (err) {
@@ -193,7 +196,9 @@ const deleteMessage = function (parametre) {
                     for (let i = 0; i < result.length; i++) {
                         const row = result[i];
                         const linkFile = row.linkFile;
-                        const filePath = path.join(__dirname, 'uploads', 'messages', linkFile);
+                        
+                        
+                        const filePath = path.join(__dirname, '../uploads', 'messages', linkFile);
 
                         // Vérifiez si le fichier existe avant de tenter de le supprimer
                         if (fs.existsSync(filePath)) {
@@ -204,15 +209,16 @@ const deleteMessage = function (parametre) {
                             console.log('Le fichier n\'existe pas :', filePath);
                         }
                     }
-
+                    
                     const query = 'delete from messages where id=?;';
                     db.query(query, [parametre.id_message], (err, result) => {
                         if (err) {
                             console.error('Erreur lors de la suppression du message:', err);
                             parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression du message' }));
                         } else {
+                            
                             io.to(`conversation:${id_conversation}`).emit('deleteMessage', { id_message, id_conversation });
-                            parametre.res.status(201);
+                            parametre.res.status(201).json({message:"Successfully Registered"});
                         }
                     });
 
