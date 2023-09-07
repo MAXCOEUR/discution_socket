@@ -117,9 +117,6 @@ router.post('', [
         return res.status(400).json({ error: error.array() });
     }
     var { id_conversation, message, file } = req.body;
-    if (file != null) {
-        file = Buffer.from(file);
-    }
 
     const tokenHeader = req.headers.authorization;
     const token = tokenHeader.split(' ')[1];
@@ -181,20 +178,44 @@ const deleteMessage = function (parametre) {
 
     const query1 = 'select id_conversation from messages where id=?;';
     db.query(query1, [parametre.id_message], (err, result) => {
+        let id_message = parametre.id_message;
         if (err) {
             console.error('Erreur lors de la suppression du message:', err);
             parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression du message' }));
         } else {
             let id_conversation = result[0]["id_conversation"];
-            const query = 'delete from messages where id=?;';
+            const query = 'select * from file where id_message=?';
             db.query(query, [parametre.id_message], (err, result) => {
                 if (err) {
-                    console.error('Erreur lors de la suppression du message:', err);
-                    parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression du message' }));
+                    console.error('Erreur lors de la suppression des fichier associer au message:', err);
+                    parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression des fichier associer au messgae:' }));
                 } else {
-                    let id_message = parametre.id_message;
-                    io.to(`conversation:${id_conversation}`).emit('deleteMessage', { id_message, id_conversation });
-                    parametre.res.status(201).send(JSON.stringify(result));
+                    for (let i = 0; i < result.length; i++) {
+                        const row = result[i];
+                        const linkFile = row.linkFile;
+                        const filePath = path.join(__dirname, 'uploads', 'messages', linkFile);
+
+                        // Vérifiez si le fichier existe avant de tenter de le supprimer
+                        if (fs.existsSync(filePath)) {
+                            // Supprimez le fichier
+                            fs.unlinkSync(filePath);
+                            console.log('Fichier supprimé :', filePath);
+                        } else {
+                            console.log('Le fichier n\'existe pas :', filePath);
+                        }
+                    }
+
+                    const query = 'delete from messages where id=?;';
+                    db.query(query, [parametre.id_message], (err, result) => {
+                        if (err) {
+                            console.error('Erreur lors de la suppression du message:', err);
+                            parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression du message' }));
+                        } else {
+                            io.to(`conversation:${id_conversation}`).emit('deleteMessage', { id_message, id_conversation });
+                            parametre.res.status(201);
+                        }
+                    });
+
                 }
             });
         }
@@ -246,7 +267,7 @@ const putMessage = function (parametre) {
                     console.error('Erreur lors de la modification du message:', err);
                     parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la modification du message' }));
                 } else {
-                    io.to(`conversation:${id_conversation}`).emit('editMessage', { id_message, id_conversation,'message':message });
+                    io.to(`conversation:${id_conversation}`).emit('editMessage', { id_message, id_conversation, 'message': message });
                     parametre.res.status(201).send(JSON.stringify(result));
                 }
             });

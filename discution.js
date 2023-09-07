@@ -30,6 +30,7 @@ const userRoutes = require('./api/user.js'); // Importez les routes utilisateur 
 const conversationRoutes = require('./api/conversation.js');
 const messageRoutes = require('./api/message.js');
 const amisRoutes = require('./api/amis.js');
+const reactionRoutes = require('./api/reaction.js');
 
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
@@ -62,6 +63,7 @@ app.use('/api/user/', userRoutes);
 app.use('/api/conv/', conversationRoutes);
 app.use('/api/message/', messageRoutes);
 app.use('/api/amis/', amisRoutes);
+app.use('/api/reaction/', reactionRoutes);
 
 
 
