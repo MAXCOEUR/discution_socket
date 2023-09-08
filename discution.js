@@ -5,6 +5,7 @@ const SocketIo = require('socket.io');
 
 const join = require('./socket/join.js');
 const message = require('./socket/message.js');
+const reaction = require('./socket/reaction.js');
 
 const app = express();
 const server = http.createServer(app);
@@ -18,6 +19,7 @@ io.on('connection', (socket) => {
   join.handleConnection(socket);
 
   message.handleConnection(socket,io);
+  reaction.handleConnection(socket,io);
 
   socket.on('disconnect', () => {
     console.log('Client déconnecté :', socket.id);
