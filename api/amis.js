@@ -28,13 +28,13 @@ router.get('', [
     const decodedToken = jwt.verify(token, SECRET_KEY);
     const uniquePseudo = decodedToken.uniquePseudo;
 
-    const query = "SELECT * FROM (SELECT DISTINCT u.* FROM user u JOIN amis a ON u.uniquePseudo = a.demandeur AND a.receveur = ? UNION SELECT DISTINCT u.* FROM user u JOIN amis a ON u.uniquePseudo = a.receveur AND a.demandeur = ? ) AS subquery WHERE uniquePseudo like ? LIMIT ? OFFSET ?;";
-    db.query(query, [uniquePseudo, uniquePseudo, search, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
+    const query = "call GetAmis(?,?,?,?)";
+    db.query(query, [uniquePseudo, search, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recherche de la conversation :', err);
             res.status(500).send('Erreur lors de la recherche de la conversation');
         } else {
-            res.status(201).send(JSON.stringify(result));
+            res.status(201).send(JSON.stringify(result[0]));
         }
     });
 });

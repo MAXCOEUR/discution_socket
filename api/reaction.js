@@ -31,25 +31,67 @@ function isInConv(token, id_conversation, parametre, func) {
 router.post('', [
     body('id_message').notEmpty().withMessage('id_message requis'),
     body('emoji').notEmpty().withMessage('emoji requis'),
-    body('id_conversation').notEmpty().withMessage('id_conversation requis'),
     authenticateToken
 ], async (req, res) => {
-    const { id_message, emoji,id_conversation } = req.body;
+    const { id_message, emoji, id_conversation } = req.body;
 
     const tokenHeader = req.headers.authorization;
     const token = tokenHeader.split(' ')[1];
     const decodedToken = jwt.verify(token, SECRET_KEY);
     const uniquePseudo = decodedToken.uniquePseudo;
 
-    const parametre = {
-        id_message,
-        emoji,
-        uniquePseudo,
-        id_conversation,
-        res
+    if (id_conversation != undefined) {
+        const parametre = {
+            id_message,
+            emoji,
+            uniquePseudo,
+            id_conversation,
+            res
+        }
+
+        isInConv(token, id_conversation, parametre, postReaction);
+    } else {
+        const selectQuery = 'SELECT * FROM reactions WHERE message_id = ? AND user_uniquePseudo = ?';
+        db.query(selectQuery, [id_message, uniquePseudo], (err, rows) => {
+            if (err) {
+                console.error('Erreur lors de la vérification de la réaction existante :', err);
+                res.status(500).json({ message: 'Erreur lors de la vérification de la réaction existante' });
+            } else {
+                // Si la réaction existe, la supprimer
+                if (rows.length > 0) {
+                    const deleteQuery = 'DELETE FROM reactions WHERE message_id = ? AND user_uniquePseudo = ?';
+                    db.query(deleteQuery, [id_message, uniquePseudo], (err, result) => {
+                        if (err) {
+                            console.error('Erreur lors de la suppression de la réaction existante :', err);
+                            res.status(500).json({ message: 'Erreur lors de la suppression de la réaction existante' });
+                        }
+                    });
+                }
+
+                // Insérer la nouvelle réaction
+                const insertQuery = 'INSERT INTO reactions (message_id, user_uniquePseudo, emoji) VALUES (?, ?, ?)';
+                db.query(insertQuery, [id_message, uniquePseudo, emoji], (err, result) => {
+                    if (err) {
+                        console.error('Erreur lors de l\'ajout de la réaction :', err);
+                        res.status(500).json({ message: 'Erreur lors de l\'ajout de la réaction' });
+                    } else {
+                        const deleteQuery = 'Select * FROM user WHERE uniquePseudo = ?';
+                        db.query(deleteQuery, [uniquePseudo], (err, result) => {
+                            if (err) {
+                                console.error('Erreur lors de l\'ajout de la réaction :', err);
+                                res.status(500).json({ message: 'Erreur lors de l\'ajout de la réaction' });
+                            } else {
+                                res.status(201).json({ message: 'Réaction ajoutée avec succès' });
+                            }
+                        });
+
+                    }
+                });
+            }
+        });
     }
 
-    isInConv(token, id_conversation, parametre, postReaction);
+
 });
 
 const postReaction = function (parametre) {
@@ -84,7 +126,7 @@ const postReaction = function (parametre) {
                             console.error('Erreur lors de l\'ajout de la réaction :', err);
                             parametre.res.status(500).json({ message: 'Erreur lors de l\'ajout de la réaction' });
                         } else {
-                            io.to(`conversation:${parametre.id_conversation}`).emit('newReaction', { 'id_message': parametre.id_message,'emoji':parametre.emoji, 'user': JSON.stringify(result[0]) });
+                            io.to(`conversation:${parametre.id_conversation}`).emit('newReaction', { 'id_message': parametre.id_message, 'emoji': parametre.emoji, 'user': JSON.stringify(result[0]) });
                             parametre.res.status(201).json({ message: 'Réaction ajoutée avec succès' });
                         }
                     });
@@ -104,7 +146,7 @@ router.get('', [
     if (!error.isEmpty()) {
         return res.status(400).json({ error: error.array() });
     }
-    var { message_id,page } = req.query;
+    var { message_id, page } = req.query;
     var nbr_ligne = page * LIGNE_PAR_PAGES;
 
     const query = 'call getReaction(?,?,?);';
@@ -118,4 +160,27 @@ router.get('', [
     });
 });
 
+router.delete('', [
+    body('id_message').notEmpty().withMessage('id_message requis'),
+    authenticateToken
+], async (req, res) => {
+    const { id_message } = req.body;
+
+    const tokenHeader = req.headers.authorization;
+    const token = tokenHeader.split(' ')[1];
+    const decodedToken = jwt.verify(token, SECRET_KEY);
+    const uniquePseudo = decodedToken.uniquePseudo;
+
+    const selectQuery = 'delete from reactions where message_id=? and user_uniquePseudo=?';
+    db.query(selectQuery, [id_message, uniquePseudo], (err, rows) => {
+        if (err) {
+            console.error('Erreur lors de la vérification de la réaction existante :', err);
+            res.status(500).json({ message: 'Erreur lors de la vérification de la réaction existante' });
+        } else {
+            res.status(201).json({ message: 'Réaction supprimé avec succès' });
+        }
+    });
+
+
+});
 module.exports = router;

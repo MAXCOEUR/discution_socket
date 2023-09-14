@@ -84,6 +84,28 @@ const getLastPost = function (parametre) {
     });
 }
 
+router.get('/one', [
+    query('id_message').notEmpty().withMessage('id_message requis'),
+    authenticateToken
+], async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({ error: error.array() });
+    }
+    var { id_message } = req.query;
+
+    const query = 'call getMessageOne(?);';
+    db.query(query, [id_message], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la recuperation des message:', err);
+            res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
+        } else {
+            res.status(201).send(JSON.stringify(result[0][0]));
+        }
+    });
+
+});
+
 
 router.post('', [
     body('message').notEmpty().withMessage('message requis'),
