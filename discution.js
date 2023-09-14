@@ -34,6 +34,7 @@ const conversationRoutes = require('./api/conversation.js');
 const messageRoutes = require('./api/message.js');
 const amisRoutes = require('./api/amis.js');
 const reactionRoutes = require('./api/reaction.js');
+const postRoutes = require('./api/post.js');
 
 app.use(bodyParser.json({ limit: '20mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '20mb' }));
@@ -67,11 +68,12 @@ app.use('/api/conv/', conversationRoutes);
 app.use('/api/message/', messageRoutes);
 app.use('/api/amis/', amisRoutes);
 app.use('/api/reaction/', reactionRoutes);
+app.use('/api/post/',postRoutes);
 
 
 
 
-const PORT = 3000;
+const PORT = 45713;
 server.listen(PORT, () => {
   console.log(`Serveur en écoute sur le port ${PORT}`);
 });

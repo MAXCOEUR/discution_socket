@@ -95,4 +95,27 @@ const postReaction = function (parametre) {
     });
 }
 
+router.get('', [
+    query('message_id').notEmpty().withMessage('message_id requis'),
+    query('page').notEmpty().withMessage('page requis'),
+    authenticateToken
+], async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({ error: error.array() });
+    }
+    var { message_id,page } = req.query;
+    var nbr_ligne = page * LIGNE_PAR_PAGES;
+
+    const query = 'call getReaction(?,?,?);';
+    db.query(query, [message_id, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la creation du message:', err);
+            res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la creation du message' }));
+        } else {
+            res.status(201).send(JSON.stringify(result[0]));
+        }
+    });
+});
+
 module.exports = router;

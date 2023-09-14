@@ -74,9 +74,35 @@ const storageFile = multer.diskStorage({
     cb(null, nameFile);
   }
 });
+const storageFilePost = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/posts');
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const nameFile = file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname);
+
+    req.body.fieldname = nameFile;
+    req.body.namereal = file.originalname;
+
+    let id_message = req.body.id_message;
+    let name = req.body.name;
+
+    const query = "INSERT INTO `discution`.`file` (`id_message`, `linkFile`,`name`) VALUES (?, ?,?);";
+    db.query(query, [id_message, nameFile, name], (err, result) => {
+      if (err) {
+        console.error('Erreur lors de la creation du message:', err);
+      } else {
+      }
+    });
+
+    cb(null, nameFile);
+  }
+});
 
 const uploadUserAvatar = multer({ storage: storageUserAvatar });
 const uploadConversationImage = multer({ storage: storageConversationImage });
 const uploadFile = multer({ storage: storageFile });
+const uploadFilePost = multer({ storage: storageFilePost });
 
-module.exports = { LIGNE_PAR_PAGES, SECRET_KEY, uploadUserAvatar, uploadConversationImage, uploadFile };
+module.exports = { LIGNE_PAR_PAGES, SECRET_KEY, uploadUserAvatar, uploadConversationImage, uploadFile,uploadFilePost };

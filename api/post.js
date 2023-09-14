@@ -6,30 +6,10 @@ const fs = require('fs');
 
 const router = express.Router();
 const { query, body, validationResult } = require('express-validator');
-const { LIGNE_PAR_PAGES, SECRET_KEY, uploadFile } = require('../constantes.js');
+const { LIGNE_PAR_PAGES, SECRET_KEY, uploadFilePost } = require('../constantes.js');
 const { authenticateToken } = require('../middleware.js');
 const { json } = require('body-parser');
 var path = require('path');
-
-
-function isInConv(token, id_conversation, parametre, func) {
-    const decodedToken = jwt.verify(token, SECRET_KEY);
-    const uniquePseudo = decodedToken.uniquePseudo;
-    const query = "select * from `user-conversation` where uniquePseudo_user=? and id_conversation=?";
-    db.query(query, [uniquePseudo, id_conversation], (err, result) => {
-        if (err) {
-            console.error('Erreur lors  :', err);
-            return false;
-        } else {
-            if (result.length === 0) {
-                console.log('l utilisateur n est pas dans la conversation');
-                parametre.res.status(500).send(JSON.stringify({ 'message': 'l utilisateur n est pas dans la conversation' }));
-            } else {
-                func(parametre);
-            }
-        }
-    });
-}
 
 function isSenderMessage(token, id_message, parametre, func) {
     const decodedToken = jwt.verify(token, SECRET_KEY);
@@ -51,7 +31,6 @@ function isSenderMessage(token, id_message, parametre, func) {
 }
 
 router.get('', [
-    query('id_conversation').notEmpty().withMessage('id_conversation requis'),
     query('id_lastMessage').notEmpty().withMessage('id_lastMessage requis'),
     authenticateToken
 ], async (req, res) => {
@@ -59,7 +38,7 @@ router.get('', [
     if (!error.isEmpty()) {
         return res.status(400).json({ error: error.array() });
     }
-    var { id_conversation, id_lastMessage } = req.query;
+    var { id_lastMessage } = req.query;
 
     const tokenHeader = req.headers.authorization;
     const token = tokenHeader.split(' ')[1];
@@ -68,27 +47,23 @@ router.get('', [
 
     if (id_lastMessage == 0) {
         const parametre = {
-            id_conversation,
             uniquePseudo,
             res
         }
-
-        isInConv(token, id_conversation, parametre, getLastMessage);
+        getLastPost(parametre);
     } else {
         const parametre = {
-            id_conversation,
             id_lastMessage,
             uniquePseudo,
             res
         }
-
-        isInConv(token, id_conversation, parametre, getMessage);
+        getPost(parametre);
     }
 
 });
-const getMessage = function (parametre) {
-    const query = 'call getMessage(?,?,?,?);';
-    db.query(query, [parametre.uniquePseudo, parametre.id_conversation, parametre.id_lastMessage, LIGNE_PAR_PAGES], (err, result) => {
+const getPost = function (parametre) {
+    const query = 'call getPost(?,?,?);';
+    db.query(query, [parametre.uniquePseudo, parametre.id_lastMessage, LIGNE_PAR_PAGES], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recuperation des message:', err);
             parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
@@ -97,9 +72,9 @@ const getMessage = function (parametre) {
         }
     });
 }
-const getLastMessage = function (parametre) {
-    const query = 'call getMessageLast(?,?,?);';
-    db.query(query, [parametre.uniquePseudo, parametre.id_conversation, LIGNE_PAR_PAGES], (err, result) => {
+const getLastPost = function (parametre) {
+    const query = 'call getLastPost(?,?);';
+    db.query(query, [parametre.uniquePseudo, LIGNE_PAR_PAGES], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recuperation des message:', err);
             parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
@@ -109,8 +84,8 @@ const getLastMessage = function (parametre) {
     });
 }
 
+
 router.post('', [
-    body('id_conversation').notEmpty().withMessage('id_conversation requis'),
     body('message').notEmpty().withMessage('message requis'),
     authenticateToken
 ], async (req, res) => {
@@ -118,7 +93,7 @@ router.post('', [
     if (!error.isEmpty()) {
         return res.status(400).json({ error: error.array() });
     }
-    var { id_conversation, message,id_parent } = req.body;
+    var { message, id_parent } = req.body;
 
     const tokenHeader = req.headers.authorization;
     const token = tokenHeader.split(' ')[1];
@@ -126,18 +101,16 @@ router.post('', [
     const uniquePseudo = decodedToken.uniquePseudo;
 
     const parametre = {
-        id_conversation,
         message,
-        uniquePseudo,
         id_parent,
+        uniquePseudo,
         res
     }
-
-    isInConv(token, id_conversation, parametre, postMessage);
+    postPost(parametre);
 });
-const postMessage = function (parametre) {
-    const query = 'call CreateMessage(?,?,?,?);';
-    db.query(query, [parametre.uniquePseudo, parametre.id_conversation, parametre.message, parametre.id_parent], (err, result) => {
+const postPost = function (parametre) {
+    const query = 'call CreatePost(?,?,?);';
+    db.query(query, [parametre.uniquePseudo, parametre.message, parametre.id_parent], (err, result) => {
         if (err) {
             console.error('Erreur lors de la creation du message:', err);
             parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la creation du message' }));
@@ -146,13 +119,12 @@ const postMessage = function (parametre) {
         }
     });
 }
-router.post('/upload', uploadFile.single('file'), (req, res) => {
+router.post('/upload', uploadFilePost.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).send(JSON.stringify({ 'message': 'Aucun fichier téléchargé.' }));
     }
     console.log("fin televersement fichier du message : " + req.body.id_message);
-    io.to(`conversation:${req.body.id_conversation}`).emit('EndFile', { 'id_message': parseInt(req.body.id_message), 'name': req.body.namereal, 'fieldname': req.body.fieldname });
-    return res.status(200).send(JSON.stringify({ 'message': 'Image téléchargée avec succès.' }));
+    return res.status(200).send(JSON.stringify({ 'id_message': parseInt(req.body.id_message), 'name': req.body.namereal, 'fieldname': req.body.fieldname }));
 });
 
 
@@ -174,9 +146,9 @@ router.delete('', [
         res
     }
 
-    isSenderMessage(token, id_message, parametre, deleteMessage);
+    isSenderMessage(token, id_message, parametre, deletePost);
 });
-const deleteMessage = function (parametre) {
+const deletePost = function (parametre) {
 
     const query1 = 'select id_conversation from messages where id=?;';
     db.query(query1, [parametre.id_message], (err, result) => {
@@ -198,7 +170,7 @@ const deleteMessage = function (parametre) {
                         const linkFile = row.linkFile;
                         
                         
-                        const filePath = path.join(__dirname, '../uploads', 'messages', linkFile);
+                        const filePath = path.join(__dirname, '../uploads', 'posts', linkFile);
 
                         // Vérifiez si le fichier existe avant de tenter de le supprimer
                         if (fs.existsSync(filePath)) {
@@ -216,9 +188,7 @@ const deleteMessage = function (parametre) {
                             console.error('Erreur lors de la suppression du message:', err);
                             parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la suppression du message' }));
                         } else {
-                            
-                            io.to(`conversation:${id_conversation}`).emit('deleteMessage', { id_message, id_conversation });
-                            parametre.res.status(201).json({message:"Successfully Registered"});
+                            parametre.res.status(201).json({ id_message, id_conversation });
                         }
                     });
 
@@ -252,9 +222,9 @@ router.put('', [
         res
     }
 
-    isSenderMessage(token, id_message, parametre, putMessage);
+    isSenderMessage(token, id_message, parametre, putPost);
 });
-const putMessage = function (parametre) {
+const putPost = function (parametre) {
     const newMes = {
         message: parametre.message
     }
@@ -273,12 +243,12 @@ const putMessage = function (parametre) {
                     console.error('Erreur lors de la modification du message:', err);
                     parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la modification du message' }));
                 } else {
-                    io.to(`conversation:${id_conversation}`).emit('editMessage', { id_message, id_conversation, 'message': message });
-                    parametre.res.status(201).send(JSON.stringify(result));
+                    parametre.res.status(201).send(JSON.stringify({ id_message, id_conversation, 'message': message }));
                 }
             });
         }
     });
 }
+
 
 module.exports = router;
