@@ -7,6 +7,7 @@ const join = require('./socket/join.js');
 const message = require('./socket/message.js');
 const reaction = require('./socket/reaction.js');
 var path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);

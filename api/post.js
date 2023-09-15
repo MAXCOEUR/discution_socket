@@ -6,7 +6,7 @@ const fs = require('fs');
 
 const router = express.Router();
 const { query, body, validationResult } = require('express-validator');
-const { LIGNE_PAR_PAGES, SECRET_KEY, uploadFilePost } = require('../constantes.js');
+const { LIGNE_PAR_PAGES, SECRET_KEY, uploadFile } = require('../constantes.js');
 const { authenticateToken } = require('../middleware.js');
 const { json } = require('body-parser');
 var path = require('path');
@@ -45,20 +45,12 @@ router.get('', [
     const decodedToken = jwt.verify(token, SECRET_KEY);
     const uniquePseudo = decodedToken.uniquePseudo;
 
-    if (id_lastMessage == 0) {
-        const parametre = {
-            uniquePseudo,
-            res
-        }
-        getLastPost(parametre);
-    } else {
-        const parametre = {
-            id_lastMessage,
-            uniquePseudo,
-            res
-        }
-        getPost(parametre);
+    const parametre = {
+        id_lastMessage,
+        uniquePseudo,
+        res
     }
+    getPost(parametre);
 
 });
 const getPost = function (parametre) {
@@ -72,17 +64,60 @@ const getPost = function (parametre) {
         }
     });
 }
-const getLastPost = function (parametre) {
-    const query = 'call getLastPost(?,?);';
-    db.query(query, [parametre.uniquePseudo, LIGNE_PAR_PAGES], (err, result) => {
+
+router.get('/childs', [
+    query('id_post').notEmpty().withMessage('id_post requis'),
+    query('id_lastMessage').notEmpty().withMessage('id_lastMessage requis'),
+    authenticateToken
+], async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({ error: error.array() });
+    }
+    var { id_post,id_lastMessage } = req.query;
+    const tokenHeader = req.headers.authorization;
+    const token = tokenHeader.split(' ')[1];
+    const decodedToken = jwt.verify(token, SECRET_KEY);
+    const uniquePseudo = decodedToken.uniquePseudo;
+
+    const query = 'call getPostChild(?,?,?,?);';
+    db.query(query, [id_post,uniquePseudo, id_lastMessage, LIGNE_PAR_PAGES], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recuperation des message:', err);
-            parametre.res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
+            res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
         } else {
-            parametre.res.status(201).send(JSON.stringify(result[0]));
+            res.status(201).send(JSON.stringify(result[0]));
         }
     });
-}
+
+});
+router.get('/users', [
+    query('pseudoUnique').notEmpty().withMessage('pseudoUnique requis'),
+    query('id_lastMessage').notEmpty().withMessage('id_lastMessage requis'),
+    authenticateToken
+], async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({ error: error.array() });
+    }
+    var { pseudoUnique,id_lastMessage } = req.query;
+    const tokenHeader = req.headers.authorization;
+    const token = tokenHeader.split(' ')[1];
+    const decodedToken = jwt.verify(token, SECRET_KEY);
+    const uniquePseudo = decodedToken.uniquePseudo;
+
+
+    const query = 'call getPostUser(?,?,?,?);';
+    db.query(query, [pseudoUnique,uniquePseudo, id_lastMessage, LIGNE_PAR_PAGES], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la recuperation des message:', err);
+            res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
+        } else {
+            res.status(201).send(JSON.stringify(result[0]));
+        }
+    });
+
+});
 
 router.get('/one', [
     query('id_message').notEmpty().withMessage('id_message requis'),
@@ -141,7 +176,7 @@ const postPost = function (parametre) {
         }
     });
 }
-router.post('/upload', uploadFilePost.single('file'), (req, res) => {
+router.post('/upload', uploadFile.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).send(JSON.stringify({ 'message': 'Aucun fichier téléchargé.' }));
     }
@@ -192,7 +227,7 @@ const deletePost = function (parametre) {
                         const linkFile = row.linkFile;
                         
                         
-                        const filePath = path.join(__dirname, '../uploads', 'posts', linkFile);
+                        const filePath = path.join(__dirname, '../uploads', 'messages', linkFile);
 
                         // Vérifiez si le fichier existe avant de tenter de le supprimer
                         if (fs.existsSync(filePath)) {

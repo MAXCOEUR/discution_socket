@@ -121,6 +121,31 @@ router.get('/demande/send', [
         }
     });
 });
+router.get('/isAmis', [
+    query('uniquePseudo_send').notEmpty().withMessage('uniquePseudo_send requis'),
+    authenticateToken
+], async (req, res) => {
+    const error = validationResult(req);
+    if (!error.isEmpty()) {
+        return res.status(400).json({ error: error.array() });
+    }
+    var {  uniquePseudo_send } = req.query;
+
+    const tokenHeader = req.headers.authorization;
+    const token = tokenHeader.split(' ')[1];
+    const decodedToken = jwt.verify(token, SECRET_KEY);
+    const uniquePseudo = decodedToken.uniquePseudo;
+
+    const query = "select isAmis(?, ?) as reponse;";
+    db.query(query, [uniquePseudo,uniquePseudo_send], (err, result) => {
+        if (err) {
+            console.error('Erreur lors de la recherche de la conversation :', err);
+            res.status(500).send('Erreur lors de la recherche de la conversation');
+        } else {
+            res.status(201).send(JSON.stringify(result[0]));
+        }
+    });
+});
 router.delete('', [
     query('uniquePseudo').exists().withMessage('uniquePseudo requis'),
     authenticateToken
