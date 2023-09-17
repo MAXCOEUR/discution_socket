@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.34, for Win64 (x86_64)
 --
--- Host: 192.168.0.168    Database: discution2
+-- Host: 192.168.0.168    Database: discution
 -- ------------------------------------------------------
 -- Server version	5.5.5-10.11.3-MariaDB-1
 
@@ -49,7 +49,7 @@ CREATE TABLE `conversation` (
   PRIMARY KEY (`id`),
   KEY `conversation->user_idx` (`uniquePseudo_admin`),
   CONSTRAINT `conversation->user` FOREIGN KEY (`uniquePseudo_admin`) REFERENCES `user` (`uniquePseudo`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -100,6 +100,7 @@ CREATE TABLE `message-read` (
   `uniquePseudo_user` varchar(80) NOT NULL,
   PRIMARY KEY (`id_message`,`uniquePseudo_user`),
   KEY `message-read->user` (`uniquePseudo_user`),
+  CONSTRAINT `message->message` FOREIGN KEY (`id_message`) REFERENCES `messages` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   CONSTRAINT `message-read->user` FOREIGN KEY (`uniquePseudo_user`) REFERENCES `user` (`uniquePseudo`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -122,9 +123,10 @@ CREATE TABLE `messages` (
   KEY `message->user_idx` (`uniquePseudo_sender`),
   KEY `message->conversation_idx` (`id_conversation`),
   KEY `message->message_idx` (`id_parent`),
+  CONSTRAINT `message->conv` FOREIGN KEY (`id_conversation`) REFERENCES `conversation` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   CONSTRAINT `message->messageParent` FOREIGN KEY (`id_parent`) REFERENCES `messages` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `message->user` FOREIGN KEY (`uniquePseudo_sender`) REFERENCES `user` (`uniquePseudo`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=61 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -184,7 +186,7 @@ CREATE TABLE `user-conversation` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping routines for database 'discution2'
+-- Dumping routines for database 'discution'
 --
 /*!50003 DROP FUNCTION IF EXISTS `isAmis` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -987,4 +989,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-09-17 11:45:19
+-- Dump completed on 2023-09-17 13:09:45
