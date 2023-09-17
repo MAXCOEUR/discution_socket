@@ -80,7 +80,12 @@ function handleupdateMessageNonLu(socket,data,io){
     if (err) {
       console.error('Erreur lors de la recherche du nombre de message non lu :', err);
     } else {
-        let unread = parseInt(result[0].unread);
+        let unread 
+        if(result.length==0){
+          unread=0;
+        }else{
+          unread = parseInt(result[0].unread);
+        }
         io.to(`user:${myUniquePseudo}`).emit('updateMessageNonLu', {unread});
     }
   });
