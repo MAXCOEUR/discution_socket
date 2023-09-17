@@ -31,7 +31,7 @@ CREATE TABLE `amis` (
   KEY `tt_idx` (`receveur`),
   CONSTRAINT `amis-demandeur->user` FOREIGN KEY (`demandeur`) REFERENCES `user` (`uniquePseudo`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `amis-receveur->user` FOREIGN KEY (`receveur`) REFERENCES `user` (`uniquePseudo`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -49,7 +49,7 @@ CREATE TABLE `conversation` (
   PRIMARY KEY (`id`),
   KEY `conversation->user_idx` (`uniquePseudo_admin`),
   CONSTRAINT `conversation->user` FOREIGN KEY (`uniquePseudo_admin`) REFERENCES `user` (`uniquePseudo`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -68,7 +68,7 @@ CREATE TABLE `demandeAmis` (
   KEY `tt_idx` (`receveur`),
   CONSTRAINT `demandeAmis-demandeur->user` FOREIGN KEY (`demandeur`) REFERENCES `user` (`uniquePseudo`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `demandeAmis-receveur->user` FOREIGN KEY (`receveur`) REFERENCES `user` (`uniquePseudo`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -85,7 +85,7 @@ CREATE TABLE `file` (
   `name` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `file->message_idx` (`id_message`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -126,7 +126,7 @@ CREATE TABLE `messages` (
   CONSTRAINT `message->conv` FOREIGN KEY (`id_conversation`) REFERENCES `conversation` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
   CONSTRAINT `message->messageParent` FOREIGN KEY (`id_parent`) REFERENCES `messages` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `message->user` FOREIGN KEY (`uniquePseudo_sender`) REFERENCES `user` (`uniquePseudo`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=66 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
