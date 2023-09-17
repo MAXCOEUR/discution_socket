@@ -102,8 +102,7 @@ router.get('/user', [
     uniquePseudo,
     res
   }
-
-  isAdmin(token, id_conversation, parametre, getConvUser);
+  getConvUser(parametre);
 });
 const getConvUser = function (parametre) {
   const query = 'select u.*,CASE WHEN EXISTS (SELECT 1 FROM amis WHERE (demandeur = ? AND receveur = u.uniquePseudo) OR (demandeur = u.uniquePseudo AND receveur = ?)) THEN 1 ELSE 0 END AS sont_amis from `user-conversation` uc join user u on uc.uniquePseudo_user=u.uniquePseudo where uc.id_conversation=? and u.uniquePseudo like ? LIMIT ? OFFSET ?;';
