@@ -121,6 +121,7 @@ router.get('/users', [
 
 router.get('/one', [
     query('id_message').notEmpty().withMessage('id_message requis'),
+    query('pseudoUnique').notEmpty().withMessage('pseudoUnique requis'),
     authenticateToken
 ], async (req, res) => {
     const error = validationResult(req);
@@ -129,8 +130,8 @@ router.get('/one', [
     }
     var { id_message } = req.query;
 
-    const query = 'call getMessageOne(?);';
-    db.query(query, [id_message], (err, result) => {
+    const query = 'call getMessageOne(?,?);';
+    db.query(query, [id_message,pseudoUnique], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recuperation des message:', err);
             res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recuperation des message' }));
