@@ -128,7 +128,7 @@ router.get('/one', [
     if (!error.isEmpty()) {
         return res.status(400).json({ error: error.array() });
     }
-    var { id_message } = req.query;
+    var { id_message,pseudoUnique } = req.query;
 
     const query = 'call getMessageOne(?,?);';
     db.query(query, [id_message,pseudoUnique], (err, result) => {
