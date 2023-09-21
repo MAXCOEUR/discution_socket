@@ -21,7 +21,7 @@ router.post('', [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  var { email, uniquePseudo, pseudo, passWord,extension,bio } = req.body;
+  var { email, uniquePseudo, pseudo, passWord, extension, bio } = req.body;
 
 
   try {
@@ -70,9 +70,9 @@ router.post('/upload', uploadUserAvatar.single('avatar'), (req, res) => {
   return res.status(200).send(JSON.stringify({ 'message': 'Image téléchargée avec succès.' }));
 });
 
-router.get('/unread',[
+router.get('/unread', [
   authenticateToken
-],async (req, res) =>{
+], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     // Envoyer une réponse avec les erreurs
@@ -215,7 +215,6 @@ router.put('', [
   body('email').notEmpty().withMessage('Email requis'),
   body('uniquePseudo').notEmpty().withMessage('UniquePseudo requis'),
   body('pseudo').notEmpty().withMessage('Pseudo requis'),
-  body('passWord').notEmpty().withMessage('PassWord requis'),
   authenticateToken
 ], async (req, res) => {
   const errors = validationResult(req);
@@ -224,7 +223,7 @@ router.put('', [
     return res.status(400).json({ errors: errors.array() });
   }
 
-  var { email, uniquePseudo, pseudo, passWord,extension,bio } = req.body;
+  var { email, uniquePseudo, pseudo, extension, bio } = req.body;
 
   const tokenHeader = req.headers.authorization;
   const token = tokenHeader.split(' ')[1];
@@ -240,16 +239,12 @@ router.put('', [
     } else if (results.length === 0) {
       res.status(401).send(JSON.stringify({ 'message': 'Utilisateur non trouvé' }));
     } else {
-      const user = results[0];
-
       try {
-        const hashedPassword = await bcrypt.hash(passWord, 10);
 
         const newUser = {
           email,
           uniquePseudo,
           pseudo,
-          passWord: hashedPassword,
           extension,
           bio
         };
@@ -281,6 +276,55 @@ router.put('', [
     }
   });
 
+
 });
+router.put('/mdp', [
+  body('oldMdp').notEmpty().withMessage('oldMdp requis'),
+  body('newMdp').notEmpty().withMessage('newMdp requis'),
+  authenticateToken
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // Envoyer une réponse avec les erreurs
+    return res.status(400).json({ errors: errors.array() });
+  }
+  var { oldMdp, newMdp } = req.body;
+  const tokenHeader = req.headers.authorization;
+  const token = tokenHeader.split(' ')[1];
+  const decodedToken = jwt.verify(token, SECRET_KEY);
+  const uniquePseudo = decodedToken.uniquePseudo;
+
+  const query = 'SELECT * FROM user WHERE uniquePseudo = ?';
+  db.query(query, [uniquePseudo], async (err, results) => {
+    if (err) {
+      console.error('Erreur lors de la vérification de la connexion:', err);
+      res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));
+    } else if (results.length === 0) {
+      res.status(401).send(JSON.stringify({ message: 'Email ou @ non trouvé' }));
+    } else {
+      var user = results[0];
+      const passwordMatch = await bcrypt.compare(oldMdp, user.passWord);
+      if (passwordMatch) {
+
+        const hashedPassword = await bcrypt.hash(newMdp, 10);
+        user.passWord=hashedPassword;
+        
+        const query = 'update user set passWord=? WHERE uniquePseudo = ?';
+        db.query(query, [hashedPassword,uniquePseudo], async (err, results) => {
+          if (err) {
+            console.error('Erreur lors de la vérification de la connexion:', err);
+            res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));
+          } else {
+            res.status(201).send(JSON.stringify(user));
+          }
+        });
+      }
+      else{
+        res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification du ancien mdp' }));
+      }
+    }
+  });
+}
+)
 
 module.exports = router;
