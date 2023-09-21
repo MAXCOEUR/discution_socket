@@ -326,5 +326,32 @@ router.put('/mdp', [
   });
 }
 )
+router.put('/tokenNotification', [
+  authenticateToken
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // Envoyer une réponse avec les erreurs
+    return res.status(400).json({ errors: errors.array() });
+  }
+  var { token } = req.body;
+  const tokenHeader = req.headers.authorization;
+  const tokenUser = tokenHeader.split(' ')[1];
+  const decodedToken = jwt.verify(tokenUser, SECRET_KEY);
+  const uniquePseudo = decodedToken.uniquePseudo;
+
+  const query = 'update user set tokenFireBase=? WHERE uniquePseudo = ?';
+  db.query(query, [token,uniquePseudo], async (err, results) => {
+    if (err) {
+      console.error('Erreur lors de la vérification de la connexion:', err);
+      res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));
+    } else if (results.length === 0) {
+      res.status(401).send(JSON.stringify({ message: 'Email ou @ non trouvé' }));
+    } else {
+      res.status(201).send(JSON.stringify({ message: 'token modifier' }));
+    }
+  });
+}
+)
 
 module.exports = router;

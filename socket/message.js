@@ -3,6 +3,8 @@ const { authenticateTokenSocket } = require('../middleware');
 const jwt = require('jsonwebtoken');
 const { SECRET_KEY, uploadFile} = require('../constantes.js');
 
+const {sendNotif}= require("../FireBaseNotification.js");
+
 module.exports = {
     handleConnection: (socket,io) => {
 
@@ -40,6 +42,7 @@ async function handleMessage(socket, data,io) {
             } else {
                 let message = result[0][0];
                 io.to(`conversation:${data.conversationId}`).emit('recevoirMessage', {message});
+                sendAllNotif(data.conversationId,message)
             }
         });
     } catch (error) {
@@ -89,4 +92,20 @@ function handleupdateMessageNonLu(socket,data,io){
         io.to(`user:${myUniquePseudo}`).emit('updateMessageNonLu', {unread});
     }
   });
+}
+
+function sendAllNotif(conversationId,message){
+  const query = "select c.name,u.tokenFireBase from user u join `user-conversation` uc on u.uniquePseudo=uc.uniquePseudo_user join conversation c on uc.id_conversation=c.id where uc.id_conversation=?;";
+  db.query(query, [conversationId], (err, result) => {
+    if (err) {
+      console.error('Erreur lors de la recherche du nombre de message non lu :', err);
+    } else {
+      for(const usersToken of result){
+        if(usersToken.tokenFireBase!=null){
+          sendNotif(usersToken.name,message.pseudo+": "+message.Message,usersToken.tokenFireBase)
+        }
+      }
+    }
+  });
+  
 }
