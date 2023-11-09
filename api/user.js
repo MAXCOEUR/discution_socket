@@ -39,7 +39,7 @@ router.post('', [
     };
 
     const query = 'INSERT INTO user SET ?';
-    db.query(query, newUser, (err, result) => {
+    db().query(query, newUser, (err, result) => {
       if (err) {
         console.error('Erreur lors de la création de l\'utilisateur:', err);
 
@@ -142,7 +142,7 @@ router.post('/login', [
 
   try {
     const query = 'SELECT * FROM user WHERE email = ? OR uniquePseudo = ?';
-    db.query(query, [emailOrPseudo, emailOrPseudo], async (err, results) => {
+    db().query(query, [emailOrPseudo, emailOrPseudo], async (err, results) => {
       if (err) {
         console.error('Erreur lors de la vérification de la connexion:', err);
         res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));

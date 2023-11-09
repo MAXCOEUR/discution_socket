@@ -29,7 +29,7 @@ async function handlesetReaction(socket,data,io){
         const uniquePseudo = decodedToken.uniquePseudo;
 
         const query = 'call setReaction(?,?,?);';
-        db.query(query, [data.messgaeId,uniquePseudo, data.reaction], (err, result) => {
+        db().query(query, [data.messgaeId,uniquePseudo, data.reaction], (err, result) => {
             if (err) {
                 console.error('Erreur lors de la création de la reaction:', err);
             } else {
@@ -55,7 +55,7 @@ async function handledeleteReaction(socket,data,io){
         const uniquePseudo = decodedToken.uniquePseudo;
 
         const query = 'DELETE FROM `discution`.`reactions` WHERE (`user_uniquePseudo` = ?) and (`message_id` = ?);';
-        db.query(query, [uniquePseudo,data.messgaeId], (err, result) => {
+        db().query(query, [uniquePseudo,data.messgaeId], (err, result) => {
             if (err) {
                 console.error('Erreur lors de la création de la reaction:', err);
             } else {
@@ -70,7 +70,7 @@ async function handledeleteReaction(socket,data,io){
 
 function sendAllNotif(conversationId,message){
     const query = "select c.name,u.tokenFireBase from user u join `user-conversation` uc on u.uniquePseudo=uc.uniquePseudo_user join conversation c on uc.id_conversation=c.id where uc.id_conversation=?;";
-    db.query(query, [conversationId], (err, result) => {
+    db().query(query, [conversationId], (err, result) => {
       if (err) {
         console.error('Erreur lors de la recherche du nombre de message non lu :', err);
       } else {

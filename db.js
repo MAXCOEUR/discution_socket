@@ -1,13 +1,23 @@
 const mysql = require('mysql2');
 
-const pool = mysql.createPool({
-  host: '127.0.0.1',
+const data = mysql.createConnection({
+  host: '192.168.0.239',
   user: 'maxence',
   password: 'Max2003?',
   database: 'discution'
 });
 
-// Pour obtenir une promesse à partir du pool, vous pouvez utiliser la méthode promise()
-const db = pool.promise();
+data.connect(err => {
+  if (err) {
+    console.error('Erreur de connexion à la base de données:', err);
+  } else {
+    console.log('Connecté à la base de données MariaDB');
+  }
+});
+
+const db = function(){
+  data.connect();
+  return data;
+}
 
 module.exports = {db};
