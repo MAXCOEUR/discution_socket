@@ -130,7 +130,7 @@ router.get('/one', [
     }
     var { id_message,pseudoUnique } = req.query;
 
-    const query = 'call getMessageOne(?,?);';
+    const query = 'call getMessageOne(?);';
     db.query(query, [id_message,pseudoUnique], (err, result) => {
         if (err) {
             console.error('Erreur lors de la recuperation des message:', err);
