@@ -13,7 +13,7 @@ function isAdmin(token, id_conversation, parametre, func) {
   const decodedToken = jwt.verify(token, SECRET_KEY);
   const uniquePseudo = decodedToken.uniquePseudo;
   const query = "select * from conversation where uniquePseudo_admin = ? and id=?";
-  db().query(query, [uniquePseudo, id_conversation], (err, result) => {
+  db.query(query, [uniquePseudo, id_conversation], (err, result) => {
     if (err) {
       console.error('Erreur lors  :', err);
       return false;
@@ -64,7 +64,7 @@ router.get('', [
     "ORDER BY c.date_dernier_message DESC "+
     "LIMIT ? "+
     "OFFSET ?;";
-    db().query(query, [uniquePseudo, search, uniquePseudo, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
+    db.query(query, [uniquePseudo, search, uniquePseudo, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
     if (err) {
       console.error('Erreur lors de la recherche de la conversation :', err);
       res.status(500).send(JSON.stringify({'message':'Erreur lors de la recherche de la conversation'}));
@@ -106,7 +106,7 @@ router.get('/user', [
 });
 const getConvUser = function (parametre) {
   const query = 'select u.*,CASE WHEN EXISTS (SELECT 1 FROM amis WHERE (demandeur = ? AND receveur = u.uniquePseudo) OR (demandeur = u.uniquePseudo AND receveur = ?)) THEN 1 ELSE 0 END AS sont_amis from `user-conversation` uc join user u on uc.uniquePseudo_user=u.uniquePseudo where uc.id_conversation=? and u.uniquePseudo like ? LIMIT ? OFFSET ?;';
-  db().query(query, [parametre.uniquePseudo, parametre.uniquePseudo, parametre.id_conversation, parametre.search, LIGNE_PAR_PAGES, parametre.nbr_ligne], (err, result) => {
+  db.query(query, [parametre.uniquePseudo, parametre.uniquePseudo, parametre.id_conversation, parametre.search, LIGNE_PAR_PAGES, parametre.nbr_ligne], (err, result) => {
     if (err) {
       console.error('Erreur lors de la création de la conversation:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de la conversation'}));
@@ -136,7 +136,7 @@ router.get('/user/short', [
 });
 const getConvUserShort = function (parametre) {
   const query = 'select uc.uniquePseudo_user from `user-conversation` uc where uc.id_conversation=?;';
-  db().query(query, [parametre.id_conversation], (err, result) => {
+  db.query(query, [parametre.id_conversation], (err, result) => {
     if (err) {
       console.error('Erreur lors de la création de la conversation:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de la conversation'}));
@@ -162,7 +162,7 @@ router.post('', [
   const uniquePseudo = decodedToken.uniquePseudo;
 
   const query = 'CALL CreateConversation(?,?,?);';
-  db().query(query, new Array(uniquePseudo, name,extension), (err, result) => {
+  db.query(query, new Array(uniquePseudo, name,extension), (err, result) => {
     if (err) {
       console.error('Erreur lors de la création de la conversation:', err);
       res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de la conversation'}));
@@ -203,13 +203,13 @@ router.post('/user', [
 });
 const addUser = function (parametre) {
   const query = 'INSERT INTO `user-conversation` (uniquePseudo_user, id_conversation) VALUES (?, ?);';
-  db().query(query, [parametre.uniquePseudo, parametre.id_conversation], (err, result) => {
+  db.query(query, [parametre.uniquePseudo, parametre.id_conversation], (err, result) => {
     if (err) {
       console.error('Erreur lors de la création de la conversation:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de la conversation'}));
     } else {
       const query = 'select * from conversation where id=?';
-      db().query(query, [parametre.id_conversation], (err, result) => {
+      db.query(query, [parametre.id_conversation], (err, result) => {
         if (err) {
           console.error('Erreur lors de la création de la conversation:', err);
           parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la création de la conversation'}));
@@ -273,7 +273,7 @@ router.delete('/user/me', [
 });
 const deleteUser = function (parametre) {
   const query = 'delete from `user-conversation` where id_conversation=? and uniquePseudo_user=?;';
-  db().query(query, [parametre.id_conversation, parametre.uniquePseudo], (err, result) => {
+  db.query(query, [parametre.id_conversation, parametre.uniquePseudo], (err, result) => {
     if (err) {
       console.error('Erreur lors de la suppression du user:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la suppression du user'}));
@@ -307,7 +307,7 @@ router.delete('', [
 });
 const deleteConversation = function (parametre) {
   const query = 'delete from `conversation` where id=?;';
-  db().query(query, [parametre.id_conversation], (err, result) => {
+  db.query(query, [parametre.id_conversation], (err, result) => {
     if (err) {
       console.error('Erreur lors de la suppression de la conv:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la suppression de la conv'}));
@@ -355,7 +355,7 @@ const putConversation = function (parametre) {
   };
 
   var queryUpdate = 'UPDATE conversation SET ? where id = ?';
-  db().query(queryUpdate, [newConv, parametre.id_conversation], (err, result) => {
+  db.query(queryUpdate, [newConv, parametre.id_conversation], (err, result) => {
     if (err) {
       console.error('Erreur lors de la mise a jour de la conv:', err);
       parametre.res.status(500).send(JSON.stringify({'message':'Erreur lors de la mise a jour de la conv'}));

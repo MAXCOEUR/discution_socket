@@ -13,7 +13,7 @@ function isInConv(token, id_conversation, parametre, func) {
     const decodedToken = jwt.verify(token, SECRET_KEY);
     const uniquePseudo = decodedToken.uniquePseudo;
     const query = "select * from `user-conversation` where uniquePseudo_user=? and id_conversation=?";
-    db().query(query, [uniquePseudo, id_conversation], (err, result) => {
+    db.query(query, [uniquePseudo, id_conversation], (err, result) => {
         if (err) {
             console.error('Erreur lors  :', err);
             return false;
@@ -52,7 +52,7 @@ router.post('', [
         isInConv(token, id_conversation, parametre, postReaction);
     } else {
         const selectQuery = 'SELECT * FROM reactions WHERE message_id = ? AND user_uniquePseudo = ?';
-        db().query(selectQuery, [id_message, uniquePseudo], (err, rows) => {
+        db.query(selectQuery, [id_message, uniquePseudo], (err, rows) => {
             if (err) {
                 console.error('Erreur lors de la vérification de la réaction existante :', err);
                 res.status(500).json({ message: 'Erreur lors de la vérification de la réaction existante' });
@@ -60,7 +60,7 @@ router.post('', [
                 // Si la réaction existe, la supprimer
                 if (rows.length > 0) {
                     const deleteQuery = 'DELETE FROM reactions WHERE message_id = ? AND user_uniquePseudo = ?';
-                    db().query(deleteQuery, [id_message, uniquePseudo], (err, result) => {
+                    db.query(deleteQuery, [id_message, uniquePseudo], (err, result) => {
                         if (err) {
                             console.error('Erreur lors de la suppression de la réaction existante :', err);
                             res.status(500).json({ message: 'Erreur lors de la suppression de la réaction existante' });
@@ -70,13 +70,13 @@ router.post('', [
 
                 // Insérer la nouvelle réaction
                 const insertQuery = 'INSERT INTO reactions (message_id, user_uniquePseudo, emoji) VALUES (?, ?, ?)';
-                db().query(insertQuery, [id_message, uniquePseudo, emoji], (err, result) => {
+                db.query(insertQuery, [id_message, uniquePseudo, emoji], (err, result) => {
                     if (err) {
                         console.error('Erreur lors de l\'ajout de la réaction :', err);
                         res.status(500).json({ message: 'Erreur lors de l\'ajout de la réaction' });
                     } else {
                         const deleteQuery = 'Select * FROM user WHERE uniquePseudo = ?';
-                        db().query(deleteQuery, [uniquePseudo], (err, result) => {
+                        db.query(deleteQuery, [uniquePseudo], (err, result) => {
                             if (err) {
                                 console.error('Erreur lors de l\'ajout de la réaction :', err);
                                 res.status(500).json({ message: 'Erreur lors de l\'ajout de la réaction' });
@@ -97,7 +97,7 @@ router.post('', [
 const postReaction = function (parametre) {
     // Vérifier si la réaction existe déjà pour cet utilisateur et ce message
     const selectQuery = 'SELECT * FROM reactions WHERE message_id = ? AND user_uniquePseudo = ?';
-    db().query(selectQuery, [parametre.id_message, parametre.uniquePseudo], (err, rows) => {
+    db.query(selectQuery, [parametre.id_message, parametre.uniquePseudo], (err, rows) => {
         if (err) {
             console.error('Erreur lors de la vérification de la réaction existante :', err);
             parametre.res.status(500).json({ message: 'Erreur lors de la vérification de la réaction existante' });
@@ -105,7 +105,7 @@ const postReaction = function (parametre) {
             // Si la réaction existe, la supprimer
             if (rows.length > 0) {
                 const deleteQuery = 'DELETE FROM reactions WHERE message_id = ? AND user_uniquePseudo = ?';
-                db().query(deleteQuery, [parametre.id_message, parametre.uniquePseudo], (err, result) => {
+                db.query(deleteQuery, [parametre.id_message, parametre.uniquePseudo], (err, result) => {
                     if (err) {
                         console.error('Erreur lors de la suppression de la réaction existante :', err);
                         parametre.res.status(500).json({ message: 'Erreur lors de la suppression de la réaction existante' });
@@ -115,13 +115,13 @@ const postReaction = function (parametre) {
 
             // Insérer la nouvelle réaction
             const insertQuery = 'INSERT INTO reactions (message_id, user_uniquePseudo, emoji) VALUES (?, ?, ?)';
-            db().query(insertQuery, [parametre.id_message, parametre.uniquePseudo, parametre.emoji], (err, result) => {
+            db.query(insertQuery, [parametre.id_message, parametre.uniquePseudo, parametre.emoji], (err, result) => {
                 if (err) {
                     console.error('Erreur lors de l\'ajout de la réaction :', err);
                     parametre.res.status(500).json({ message: 'Erreur lors de l\'ajout de la réaction' });
                 } else {
                     const deleteQuery = 'Select * FROM user WHERE uniquePseudo = ?';
-                    db().query(deleteQuery, [parametre.uniquePseudo], (err, result) => {
+                    db.query(deleteQuery, [parametre.uniquePseudo], (err, result) => {
                         if (err) {
                             console.error('Erreur lors de l\'ajout de la réaction :', err);
                             parametre.res.status(500).json({ message: 'Erreur lors de l\'ajout de la réaction' });
@@ -150,7 +150,7 @@ router.get('', [
     var nbr_ligne = page * LIGNE_PAR_PAGES;
 
     const query = 'call getReaction(?,?,?);';
-    db().query(query, [message_id, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
+    db.query(query, [message_id, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
         if (err) {
             console.error('Erreur lors de la creation du message:', err);
             res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la creation du message' }));
@@ -172,7 +172,7 @@ router.delete('', [
     const uniquePseudo = decodedToken.uniquePseudo;
 
     const selectQuery = 'delete from reactions where message_id=? and user_uniquePseudo=?';
-    db().query(selectQuery, [id_message, uniquePseudo], (err, rows) => {
+    db.query(selectQuery, [id_message, uniquePseudo], (err, rows) => {
         if (err) {
             console.error('Erreur lors de la vérification de la réaction existante :', err);
             res.status(500).json({ message: 'Erreur lors de la vérification de la réaction existante' });

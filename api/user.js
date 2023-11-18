@@ -39,7 +39,7 @@ router.post('', [
     };
 
     const query = 'INSERT INTO user SET ?';
-    db().query(query, newUser, (err, result) => {
+    db.query(query, newUser, (err, result) => {
       if (err) {
         console.error('Erreur lors de la création de l\'utilisateur:', err);
 
@@ -84,7 +84,7 @@ router.get('/unread', [
   const myUniquePseudo = decodedToken.uniquePseudo;
 
   const query = "select sum(unread) unread from `user-conversation` uc left join ( 	SELECT m.id_conversation, COUNT(m.id) - IFNULL(COUNT(r.id_message), 0) AS unread     FROM messages m     LEFT JOIN `message-read` r ON m.id = r.id_message     AND r.uniquePseudo_user = ?     GROUP BY m.id_conversation)cc on uc.id_conversation=cc.id_conversation where uc.uniquePseudo_user=? group by uc.uniquePseudo_user;";
-  db().query(query, [myUniquePseudo, myUniquePseudo], (err, result) => {
+  db.query(query, [myUniquePseudo, myUniquePseudo], (err, result) => {
     if (err) {
       console.error('Erreur lors de la recherche du nombre de message non lu :', err);
       res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recherche du nombre de message non lu' }));
@@ -116,7 +116,7 @@ router.get('', [
   const myUniquePseudo = decodedToken.uniquePseudo;
 
   const query = "SELECT u.*, CASE WHEN EXISTS (SELECT 1 FROM amis WHERE (demandeur = ? AND receveur = u.uniquePseudo) OR (demandeur = u.uniquePseudo AND receveur = ?)) THEN 1 ELSE 0 END AS sont_amis FROM user u WHERE u.uniquePseudo LIKE ? LIMIT ? OFFSET ?;";
-  db().query(query, [myUniquePseudo, myUniquePseudo, search, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
+  db.query(query, [myUniquePseudo, myUniquePseudo, search, LIGNE_PAR_PAGES, nbr_ligne], (err, result) => {
     if (err) {
       console.error('Erreur lors de la recherche de l\'utilisateur:', err);
       res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la recherche de l\'utilisateur' }));
@@ -142,7 +142,7 @@ router.post('/login', [
 
   try {
     const query = 'SELECT * FROM user WHERE email = ? OR uniquePseudo = ?';
-    db().query(query, [emailOrPseudo, emailOrPseudo], async (err, results) => {
+    db.query(query, [emailOrPseudo, emailOrPseudo], async (err, results) => {
       if (err) {
         console.error('Erreur lors de la vérification de la connexion:', err);
         res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));
@@ -187,7 +187,7 @@ router.post('/login/token', [
   const uniquePseudo = decodedToken.uniquePseudo;
 
   const query = 'SELECT * FROM user WHERE uniquePseudo = ?';
-  db().query(query, [uniquePseudo], async (err, results) => {
+  db.query(query, [uniquePseudo], async (err, results) => {
     if (err) {
       console.error('Erreur lors de la vérification de la connexion:', err);
       res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));
@@ -232,7 +232,7 @@ router.put('', [
 
 
   var querySelect = 'SELECT * FROM user WHERE uniquePseudo = ?';
-  db().query(querySelect, [uniquePseudo_old], async (err, results) => {
+  db.query(querySelect, [uniquePseudo_old], async (err, results) => {
     if (err) {
       console.error('Erreur lors de la vérification de la connexion:', err);
       res.status(500).send(JSON.stringify({ 'message': 'Erreur lors de la vérification de la connexion' }));
@@ -250,7 +250,7 @@ router.put('', [
         };
 
         var queryUpdate = 'UPDATE user SET ? where uniquePseudo = ?';
-        db().query(queryUpdate, [newUser, uniquePseudo_old], (err, result) => {
+        db.query(queryUpdate, [newUser, uniquePseudo_old], (err, result) => {
           if (err) {
             console.error('Erreur lors de la création de l\'utilisateur:', err);
 
@@ -295,7 +295,7 @@ router.put('/mdp', [
   const uniquePseudo = decodedToken.uniquePseudo;
 
   const query = 'SELECT * FROM user WHERE uniquePseudo = ?';
-  db().query(query, [uniquePseudo], async (err, results) => {
+  db.query(query, [uniquePseudo], async (err, results) => {
     if (err) {
       console.error('Erreur lors de la vérification de la connexion:', err);
       res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));
@@ -310,7 +310,7 @@ router.put('/mdp', [
         user.passWord=hashedPassword;
         
         const query = 'update user set passWord=? WHERE uniquePseudo = ?';
-        db().query(query, [hashedPassword,uniquePseudo], async (err, results) => {
+        db.query(query, [hashedPassword,uniquePseudo], async (err, results) => {
           if (err) {
             console.error('Erreur lors de la vérification de la connexion:', err);
             res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));
@@ -341,7 +341,7 @@ router.put('/tokenNotification', [
   const uniquePseudo = decodedToken.uniquePseudo;
 
   const query = 'update user set tokenFireBase=? WHERE uniquePseudo = ?';
-  db().query(query, [token,uniquePseudo], async (err, results) => {
+  db.query(query, [token,uniquePseudo], async (err, results) => {
     if (err) {
       console.error('Erreur lors de la vérification de la connexion:', err);
       res.status(500).send(JSON.stringify({ message: 'Erreur lors de la vérification de la connexion' }));

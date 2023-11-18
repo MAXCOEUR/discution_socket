@@ -64,7 +64,7 @@ const storageFile = multer.diskStorage({
     let name = req.body.name;
 
     const query = "INSERT INTO `file` (`id_message`, `linkFile`,`name`) VALUES (?, ?,?);";
-    db().query(query, [id_message, nameFile, name], (err, result) => {
+    db.query(query, [id_message, nameFile, name], (err, result) => {
       if (err) {
         console.error('Erreur lors de la creation du message:', err);
       } else {

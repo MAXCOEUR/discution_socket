@@ -1,23 +1,22 @@
 const mysql = require('mysql2');
 
-const data = mysql.createConnection({
+const db = mysql.createPool({
   host: '192.168.0.239',
   user: 'maxence',
   password: 'Max2003?',
-  database: 'discution'
+  database: 'discution',
+  waitForConnections: true,
+  connectionLimit: 50,
+  queueLimit: 0
 });
-
-data.connect(err => {
+db.getConnection((err, connection) => {
   if (err) {
     console.error('Erreur de connexion à la base de données:', err);
   } else {
     console.log('Connecté à la base de données MariaDB');
+    // Libérez la connexion, elle sera automatiquement retournée au pool.
+    connection.release();
   }
 });
-
-const db = function(){
-  data.connect();
-  return data;
-}
 
 module.exports = {db};
